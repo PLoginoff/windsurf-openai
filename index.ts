@@ -14,6 +14,7 @@ import { clearSessionIds } from "./chat";
 import { clearCachedCatalog, getCachedCatalog } from "./catalog";
 
 let _pi: ExtensionAPI | null = null;
+let _baseUrl: string | null = null;
 
 const STATIC_MODELS = [
   { id: "claude-opus-4.7:medium", name: "Claude Opus 4.7 Medium", reasoning: true, input: ["text","image"] as ("text"|"image")[], cost: { input: 15, output: 75, cacheRead: 1.5, cacheWrite: 18.75 }, contextWindow: 1000000, maxTokens: 128000 },
@@ -50,6 +51,48 @@ function mc(m: typeof STATIC_MODELS[number]) {
   return { id: m.id, name: m.name, reasoning: m.reasoning, input: m.input, cost: m.cost, contextWindow: m.contextWindow, maxTokens: m.maxTokens };
 }
 
+// Build merged models list: static fallback + live catalog entries
+function buildModels(catalog: Awaited<ReturnType<typeof getCachedCatalog>>): ReturnType<typeof mc>[] {
+  const models = new Map<string, ReturnType<typeof mc>>();
+  // Static models as base
+  for (const m of STATIC_MODELS) models.set(m.id, mc(m));
+  // Catalog entries: add models not already in static list, skip disabled
+  if (catalog) {
+    for (const [uid, entry] of catalog.byUid) {
+      if (entry.disabled) continue;
+      if (models.has(uid)) continue;
+      models.set(uid, {
+        id: uid,
+        name: entry.label || uid,
+        reasoning: true,
+        input: ["text", "image"] as ("text" | "image")[],
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+        contextWindow: 200000,
+        maxTokens: 128000,
+      });
+    }
+  }
+  return [...models.values()];
+}
+
+// Register or update the windsurf provider with current models
+function registerWindsurfProvider(pi: ExtensionAPI, baseUrl: string, catalog: Awaited<ReturnType<typeof getCachedCatalog>>): void {
+  pi.registerProvider("windsurf", {
+    name: "Cognition (Windsurf)",
+    baseUrl,
+    apiKey: PROXY_SECRET,
+    api: "openai-completions",
+    authHeader: true,
+    models: buildModels(catalog),
+    oauth: {
+      name: "Windsurf (Cognition)",
+      login: loginWindsurf,
+      refreshToken: refreshWindsurfToken,
+      getApiKey: (creds: OAuthCredentials) => creds.access,
+    },
+  });
+}
+
 // OAuth
 async function loginWindsurf(callbacks: OAuthLoginCallbacks): Promise<OAuthCredentials> {
   let token: string;
@@ -73,6 +116,15 @@ async function loginWindsurf(callbacks: OAuthLoginCallbacks): Promise<OAuthCrede
   clearCachedUserJwt();
   clearSessionIds();
   clearCachedCatalog();
+
+  // Re-register provider with live catalog after login
+  if (_pi && _baseUrl) {
+    try {
+      const freshCatalog = await getCachedCatalog(result.apiKey, result.apiServerUrl);
+      registerWindsurfProvider(_pi, _baseUrl, freshCatalog);
+    } catch {}
+  }
+
   return { refresh: result.apiKey, access: result.apiKey, expires: Date.now() + 365 * 24 * 60 * 60 * 1000 };
 }
 
@@ -84,26 +136,24 @@ export default async function (pi: ExtensionAPI) {
 
   const proxyPort = await startProxy();
   const baseUrl = `http://127.0.0.1:${proxyPort}/v1`;
+  _baseUrl = baseUrl;
 
   let hasCreds = false;
+  let catalog = null;
   try {
     const stored = loadCredentials();
-    if (stored) { setProxyCredentials({ apiKey: stored.apiKey, apiServerUrl: stored.apiServerUrl }); hasCreds = true; }
+    if (stored) {
+      setProxyCredentials({ apiKey: stored.apiKey, apiServerUrl: stored.apiServerUrl });
+      hasCreds = true;
+      // Fetch live catalog if creds available
+      try { catalog = await getCachedCatalog(stored.apiKey, stored.apiServerUrl); } catch {}
+    }
   } catch {}
 
-  pi.registerProvider("windsurf", {
-    name: "Cognition (Windsurf)",
-    baseUrl, apiKey: PROXY_SECRET, api: "openai-completions", authHeader: true,
-    models: STATIC_MODELS.map(mc),
-    oauth: {
-      name: "Windsurf (Cognition)",
-      login: loginWindsurf,
-      refreshToken: refreshWindsurfToken,
-      getApiKey: (creds: OAuthCredentials) => creds.access,
-    },
-  });
+  registerWindsurfProvider(pi, baseUrl, catalog);
 
-  console.error(hasCreds ? `[windsurf] connected` : `[windsurf] /login windsurf to connect`);
+  const catalogCount = catalog ? catalog.byUid.size : 0;
+  console.error(hasCreds ? `[windsurf] connected (${catalogCount} catalog models)` : `[windsurf] /login windsurf to connect`);
 
   pi.registerCommand("windsurf-status", {
     description: "Show Windsurf auth status",
@@ -133,17 +183,15 @@ export default async function (pi: ExtensionAPI) {
       }
       clearCachedCatalog();
       try {
-        const catalog = await getCachedCatalog(c.apiKey, c.apiServerUrl);
-        if (catalog) {
-          ctx.ui.notify(`Windsurf: refreshed ${catalog.byUid.size} models. Restart Pi to apply.`, "info");
-        } else {
-          ctx.ui.notify("Windsurf: refresh failed. Check connection.", "warning");
-        }
+        const freshCatalog = await getCachedCatalog(c.apiKey, c.apiServerUrl);
+        registerWindsurfProvider(pi, baseUrl, freshCatalog);
+        const count = freshCatalog ? freshCatalog.byUid.size : 0;
+        ctx.ui.notify(`Windsurf: refreshed ${count} models.`, "info");
       } catch (e) {
         ctx.ui.notify(`Windsurf: refresh error - ${e instanceof Error ? e.message : String(e)}`, "error");
       }
     },
   });
 
-  pi.on("session_shutdown", async () => { _pi = null; stopProxy(); });
+  pi.on("session_shutdown", async () => { _pi = null; _baseUrl = null; stopProxy(); });
 }
