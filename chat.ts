@@ -430,7 +430,7 @@ export async function* streamChatEvents(req: CloudChatRequest): AsyncGenerator<C
         const readP = reader.read();
         readP.catch(() => {});
         idleController.signal.addEventListener("abort", () => {
-          try { void resp.body?.cancel(idleController.signal.reason ?? new Error("idle abort")); } catch {}
+          try { void reader.cancel(idleController.signal.reason ?? new Error("idle abort")).catch(() => {}); } catch {}
           settle(() => reject(idleController.signal.reason ?? new Error("idle abort")));
         }, { once: true });
         readP.then(v => settle(() => resolve(v)), e => settle(() => reject(e)));
