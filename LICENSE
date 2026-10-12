@@ -1,6 +1,7 @@
 MIT License
 
-Copyright (c) 2026 Vedant
+Copyright (c) 2026 Vedant (original pi-windsurf / opencode-windsurf-auth)
+Copyright (c) 2026 ploginoff (standalone windsurf-openai rework)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

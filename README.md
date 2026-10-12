@@ -1,116 +1,100 @@
-# pi-windsurf
+# windsurf-openai
 
-Use Windsurf/Cognition models in [Pi](https://github.com/earendil-works/pi) — Claude, GPT, Gemini, Kimi, DeepSeek, SWE, and more. All via your existing Windsurf subscription. No separate API keys.
+Standalone proxy that exposes **Windsurf/Cognition/Devin models as a plain OpenAI API** — plug them into Zed, or any OpenAI-compatible client, using your existing Windsurf subscription.
+
+Based on [pi-windsurf](https://github.com/ktappdev/pi-windsurf) (originally a Pi extension), reworked into a pure proxy.
+
+![windsurf-openai — Windsurf models in Zed's model picker](screenshot.png)
+
+## Why
+
+A Windsurf subscription gives you access to Claude, GPT, Gemini, Kimi, SWE, GLM and more — but only inside Windsurf's own IDE. Two problems with that: first, you might just prefer a different editor. Second — as of October 2026 they straight-up broke their own IDE for regular users with a botched team migration (a "team" error on launch, fix timeline unknown). The models themselves still respond fine through this proxy — in whatever editor you actually use.
+
+- **No Windsurf IDE needed** — OAuth once, then it's just a localhost HTTP service
+- **Zero dependencies** — plain Node/tsx, no npm packages
+- **Live model list** — fetched from Windsurf itself (`GetUserStatus`), not a hardcoded table; new models appear automatically
+- **Cost tiers in the names** — Windsurf publishes no pricing, but its API leaks credits-per-prompt and promo windows; the proxy surfaces them as `($)`/`($$)`/`($$$)`/`(free)` right in the model list, so you know what you're spending
+- **Zed native** — works with Zed's built-in `llama.cpp` provider: model list auto-populates with context windows, featured models pinned on top
+
+There are alternatives ([WindsurfAPI](https://github.com/dwgx/WindsurfAPI), `windsurf2api` variants, etc.) — I tried them and none quite fit: some bundle a heavy runtime, some hardcode stale model lists, most skip Zed's auto-discovery entirely, and none show what each model costs. This one stays small, dependency-free, and honest about pricing.
 
 ## How it works
 
-Runs a local proxy at `127.0.0.1:42100` that speaks standard OpenAI Chat Completions API. Translates requests to Windsurf's proprietary Connect-RPC wire format. Pi talks to the proxy via `api: "openai-completions"` — no custom streaming code needed.
-
-**No Windsurf IDE needed.** Cloud-direct mode talks straight to Cognition's servers over HTTPS. No Windsurf installation, no background processes. The local proxy adds negligible overhead — ~15MB memory, sub-millisecond latency.
-
 ```
-Pi → proxy (localhost:42100) → Cognition Cloud
+Zed → proxy (localhost:42100, OpenAI API) → Windsurf cloud (Connect-RPC)
 ```
 
-## Install
+The proxy translates standard OpenAI Chat Completions to Windsurf's proprietary wire format.
 
-**Option A — npm (recommended):**
+## Quick start
 
 ```bash
-pi install npm:pi-windsurf
+npx tsx cli.ts login     # browser OAuth → credentials saved to ~/.config/opencode-windsurf-auth/
+npx tsx cli.ts serve     # proxy on http://127.0.0.1:42100/v1
 ```
 
-**Option B — Git:**
+(Or `bun cli.ts …` / `npm run serve`. Plain Node does not work — extensionless imports.)
 
-```bash
-pi install git:github.com/ktappdev/pi-windsurf
+## Zed setup
+
+Use the **llama.cpp provider** (settings key: `"llama.cpp"`, URL has no `/v1` — the provider appends `/v1/models` itself):
+
+```json
+{
+  "language_models": {
+    "llama.cpp": {
+      "api_url": "http://127.0.0.1:42100"
+    }
+  }
+}
 ```
 
-**Option B — Manual:**
+Restart Zed — the model list appears automatically: a few **featured models pinned on top** (edit `FEATURED_UIDS` in `featured.ts` to taste), then promo/free, then `($)` → `($$)` → `($$$)`, with per-model context windows. No API key needed on localhost.
 
-```bash
-git clone https://github.com/ktappdev/pi-windsurf.git ~/.pi/agent/extensions/windsurf
-```
+Other editors: point any OpenAI-compatible client at `http://127.0.0.1:42100/v1` (auth: Bearer key from `cli.ts status` for non-localhost clients).
 
-**Option C — Local dev:**
-
-```bash
-git clone https://github.com/ktappdev/pi-windsurf.git ~/developer/pi-windsurf
-pi -e ~/developer/pi-windsurf/index.ts
-```
-
-## Setup
-
-### 1. Sign in
-
-```
-/login windsurf
-```
-
-Browser opens to windsurf.com. Sign in with your Windsurf account. Token captured automatically.
-
-### 2. Pick a model
-
-```
-/model windsurf/<model-id>
-```
-
-Models shown are whatever your Windsurf plan enables. The extension fetches the live catalog from Cognition at startup — new models appear automatically.
-
-### 3. Chat
-
-Use Pi as normal. Your Windsurf subscription covers API costs.
-
-## Commands
+## CLI
 
 | Command | Does |
 |---------|------|
-| `/login windsurf` | Sign in (browser-based OAuth) |
-| `/windsurf-status` | Show auth state |
-| `/windsurf-logout` | Sign out |
-| `/windsurf-refresh` | Refresh model list from Cognition |
+| `serve` | Start the proxy (`--port`, `--host`) |
+| `login` / `logout` | Browser OAuth / remove credentials |
+| `status` | Show saved credentials |
+| `models` | List models with cost tiers (`--zed` → ready-to-paste JSON) |
+| `probe` | Dump Windsurf's raw per-model credits + prices |
 
-## How models update
+## Cost tiers
 
-On startup (and after `/login`), the extension calls Cognition's `GetCascadeModelConfigs` endpoint — same one the Windsurf IDE uses. Only models enabled for your plan appear. When Windsurf adds new models, restart Pi or run `/windsurf-refresh`.
+Windsurf exposes no public pricing. Tiers come from its own `GetUserStatus` data: **credits per prompt** and **promo windows** (the plugin's "PROMO" badge).
 
-## What models?
+| Tier | Meaning |
+|---|---|
+| `(free)` | active promo window or 0 credits — verified from Windsurf |
+| `($)` / `($$)` / `($$$)` | <10 / <100 / ≥100 credits per prompt |
+| `(unknown)` | no credits data (new models — override via `tiers.json`) |
 
-Depends on your Windsurf plan. Typically includes:
+Override any tier via `tiers.json` next to the CLI.
 
-- **Claude** — Opus 4.7/4.6, Sonnet 4.6/4.5, Haiku 4.5
-- **GPT** — 5.5, 5.4, 5.3-Codex, 5.2-Codex
-- **Gemini** — 3.5 Flash, 3.1 Pro
-- **Kimi** — K2.6
-- **DeepSeek** — V4
-- **SWE** — 1.6, 1.5
-- And more — BYOK models, enterprise deployments, experimental releases
+## Behind a proxy
 
-## Files
+Outbound requests to Windsurf honor the standard `HTTPS_PROXY` / `HTTP_PROXY` / `NO_PROXY` env vars:
 
-```
-index.ts       Pi extension entry (provider + OAuth)
-proxy.ts       HTTP server (OpenAI → gRPC)
-chat.ts        Connect-RPC streaming (proto encode/decode)
-catalog.ts     Live model catalog (GetCascadeModelConfigs)
-models.ts      Variant catalog + model resolution
-auth.ts        JWT minting
-metadata.ts    Proto metadata builder
-wire.ts        Proto wire format helpers
-oauth.ts       Login loopback + RegisterUser
-```
+- **Bun** — works out of the box (`HTTPS_PROXY=http://proxy:3128 bun cli.ts serve`)
+- **Node 24+** — `NODE_USE_ENV_PROXY=1 HTTPS_PROXY=http://proxy:3128 npx tsx cli.ts serve`
+- **Older Node** — fetch ignores proxy env vars; run through Bun, or upgrade Node
+
+## Security
+
+Localhost clients are trusted without a key. With `--host 0.0.0.0`, chat requests from remote clients must send `Authorization: Bearer <apiKey>` (the model list itself — names and tiers only — stays readable without a key). Credentials stored mode 0600. Never commit API keys.
 
 ## Requirements
 
-- Pi (any recent version)
-- Node.js ≥ 18 or Bun
+- tsx (`npx tsx`) or Bun — no npm dependencies
 - Windsurf account (free or paid)
-
-No npm dependencies. Uses only Node built-ins and Pi's own types.
 
 ## Credits
 
-Built on reverse-engineering work from [opencode-windsurf-auth](https://github.com/rsvedant/opencode-windsurf-auth) by @rsvedant. The proxy architecture, proto wire format, and OAuth flow are adapted from that project.
+Reverse-engineering by [opencode-windsurf-auth](https://github.com/rsvedant/opencode-windsurf-auth) (@rsvedant); proxy architecture from [pi-windsurf](https://github.com/ktappdev/pi-windsurf) by @ktappdev. Standalone proxy rework by @ploginoff.
 
 ## License
 

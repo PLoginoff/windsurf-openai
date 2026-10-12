@@ -60,9 +60,13 @@ export interface CloudChatRequest {
 }
 
 export class CloudChatError extends Error {
-  constructor(message: string, public readonly code?: string, public readonly traceId?: string) {
+  public readonly code?: string;
+  public readonly traceId?: string;
+  constructor(message: string, code?: string, traceId?: string) {
     super(message);
     this.name = "CloudChatError";
+    this.code = code;
+    this.traceId = traceId;
   }
 }
 
@@ -229,14 +233,14 @@ function encodeCompletionConfiguration(opts: {
   ]);
 }
 
-interface BuildArgs {
+export interface BuildArgs {
   apiKey: string; userJwt: string; modelUid: string; messages: ChatHistoryItem[];
   cascadeId: string; promptId: string; sessionId: string; requestId: bigint; triggerId: string;
   tools?: ToolDef[]; requestType?: number;
   completionOpts?: { maxOutputTokens?: number; maxInputTokens?: number; temperature?: number; topK?: number; topP?: number; };
 }
 
-function buildGetChatMessageRequest(args: BuildArgs): Buffer {
+export function buildGetChatMessageRequest(args: BuildArgs): Buffer {
   const metadata = buildMetadata({
     apiKey: args.apiKey, userJwt: args.userJwt, sessionId: args.sessionId,
     requestId: args.requestId, triggerId: args.triggerId,
@@ -267,7 +271,7 @@ function buildGetChatMessageRequest(args: BuildArgs): Buffer {
 // Response decoding
 // ----------------------------------------------------------------------------
 
-function* decodeChatFrame(proto: Buffer): Generator<CloudChatEvent> {
+export function* decodeChatFrame(proto: Buffer): Generator<CloudChatEvent> {
   for (const f of iterFields(proto)) {
     if (f.num === 3 && f.wire === 2 && Buffer.isBuffer(f.value)) {
       const s = (f.value as Buffer).toString("utf8");
@@ -299,6 +303,8 @@ function* decodeChatFrame(proto: Buffer): Generator<CloudChatEvent> {
     } else if (f.num === 28 && f.wire === 2 && Buffer.isBuffer(f.value)) {
       const usage = decodeUsageBlock(f.value as Buffer);
       if (usage) yield usage;
+    } else if (process.env.WINDSURF_DEBUG_USAGE) {
+      console.error(`[windsurf] frame field num=${f.num} wire=${f.wire}${Buffer.isBuffer(f.value) ? ` len=${f.value.length}` : ` val=${f.value}`}`);
     }
   }
 }
@@ -310,11 +316,21 @@ function decodeUsageBlock(buf: Buffer): CloudChatEvent | null {
   let cacheCreationInputTokens: number | undefined;
   let reasoningTokens: number | undefined;
 
+  const debug = !!process.env.WINDSURF_DEBUG_USAGE;
   for (const f of iterFields(buf)) {
-    if (f.num !== 2 || f.wire !== 2 || !Buffer.isBuffer(f.value)) continue;
+    if (f.num !== 2 || f.wire !== 2 || !Buffer.isBuffer(f.value)) {
+      if (debug) console.error(`[windsurf] usage top-level field num=${f.num} wire=${f.wire}`);
+      continue;
+    }
     let entryMetric: string | undefined;
     let entryValue: number | undefined;
     for (const sf of iterFields(f.value as Buffer)) {
+      if (debug) {
+        const v = Buffer.isBuffer(sf.value)
+          ? /[^ -~]/.test(sf.value.toString("latin1")) ? `hex:${sf.value.toString("hex").slice(0, 24)}` : sf.value.toString("utf8").slice(0, 40)
+          : String(sf.value);
+        console.error(`[windsurf] usage entry field num=${sf.num} wire=${sf.wire} val=${v}`);
+      }
       if (sf.num === 5 && sf.wire === 2 && Buffer.isBuffer(sf.value)) {
         entryMetric = (sf.value as Buffer).toString("utf8");
       } else if (sf.num === 4 && sf.wire === 2 && Buffer.isBuffer(sf.value)) {

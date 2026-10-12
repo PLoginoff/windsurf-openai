@@ -251,7 +251,7 @@ function startCallbackServer(): Promise<CallbackServer> {
 }
 
 function renderResponse(res: http.ServerResponse, ok: boolean, message: string): void {
-  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Pi Windsurf</title><style>body{font:14px -apple-system,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#0b0d12;color:#e7e9ee}.card{max-width:520px;padding:28px 32px;border-radius:14px;background:#151823;border:1px solid #232838;text-align:center}h1{font-size:18px;margin:0 0 10px;color:${ok ? "#71d784" : "#ff8585"}}p{margin:6px 0;color:#9aa3b2}</style></head><body><div class="card"><h1>${ok ? "Signed in" : "Sign-in failed"}</h1><p>${escapeHtml(message)}</p></div></body></html>`;
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>windsurf-openai</title><style>body{font:14px -apple-system,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#0b0d12;color:#e7e9ee}.card{max-width:520px;padding:28px 32px;border-radius:14px;background:#151823;border:1px solid #232838;text-align:center}h1{font-size:18px;margin:0 0 10px;color:${ok ? "#71d784" : "#ff8585"}}p{margin:6px 0;color:#9aa3b2}</style></head><body><div class="card"><h1>${ok ? "Signed in" : "Sign-in failed"}</h1><p>${escapeHtml(message)}</p></div></body></html>`;
   res.writeHead(ok ? 200 : 400, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
   res.end(html);
 }

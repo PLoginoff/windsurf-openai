@@ -122,18 +122,3 @@ export function clearCachedCatalog(): void {
   inFlight = null;
   inFlightKey = null;
 }
-
-export class ModelNotAvailableError extends Error {
-  constructor(
-    public readonly modelUid: string,
-    public readonly label: string,
-    public readonly reason: "disabled" | "not_listed",
-  ) {
-    super(
-      reason === "disabled"
-        ? `Model "${label}" (uid=${modelUid}) is not enabled for your Cognition account. Check https://codeium.com/account.`
-        : `Model uid "${modelUid}" is not listed in the Cognition catalog for your account.`,
-    );
-    this.name = "ModelNotAvailableError";
-  }
-}

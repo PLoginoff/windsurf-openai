@@ -1,27 +1,37 @@
 {
-  "name": "pi-windsurf",
-  "version": "0.1.5",
-  "description": "Windsurf/Cognition models in Pi — Claude, GPT, Gemini, Kimi, DeepSeek, SWE via your Windsurf subscription",
-  "author": "Ken Taylor",
+  "name": "windsurf-openai",
+  "version": "0.2.0",
+  "description": "Standalone OpenAI-compatible proxy for Windsurf/Cognition/Devin models — use Claude, GPT, Gemini, Kimi, SWE in Zed (or any editor) via your Windsurf subscription",
+  "author": "ploginoff",
+  "contributors": ["Ken Taylor (original pi-windsurf)"],
   "license": "MIT",
   "keywords": [
-    "pi-package",
-    "pi",
     "windsurf",
-    "cognition",
+    "devin",
     "codeium",
-    "ai",
-    "llm",
-    "provider"
+    "cognition",
+    "zed",
+    "openai-compatible",
+    "llm-proxy",
+    "claude",
+    "gemini",
+    "self-hosted",
+    "proxy"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ktappdev/pi-windsurf.git"
+    "url": "git+https://github.com/ploginoff/windsurf-openai.git"
   },
-  "pi": {
-    "extensions": [
-      "./index.ts"
-    ]
+  "bin": {
+    "windsurf-openai": "./cli.ts"
+  },
+  "scripts": {
+    "serve": "npx tsx cli.ts serve",
+    "login": "npx tsx cli.ts login",
+    "status": "npx tsx cli.ts status",
+    "logout": "npx tsx cli.ts logout",
+    "models": "npx tsx cli.ts models",
+    "probe": "npx tsx cli.ts probe"
   },
   "files": [
     "*.ts",
