@@ -6,13 +6,15 @@
  * WindSurf's cloud-direct GetChatMessage wire format.
  */
 import * as crypto from "crypto";
+import * as fs from "fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "http";
-import { streamChatEvents, CloudChatError, type ChatHistoryItem, type ToolDef } from "./chat";
+import { streamChatEventsWithRetry, CloudChatError, type ChatHistoryItem, type ToolDef } from "./chat";
 import { loadCredentials } from "./oauth";
 import { getCachedCatalog } from "./catalog";
-import { getUserStatus, getCachedUserStatus, isPromoActive, type UserStatusModel } from "./status";
-import { stripCostAnnotation, tierAnnotation, tierFromCredits, userTierOverride, titleizeModelId, type PriceTier, type UsageSummary } from "./costs";
+import { getUserStatus, getCachedUserStatus, isPromoActive, isActuallyFreePromo, type UserStatusModel } from "./status";
+import { stripCostAnnotation, tierAnnotation, tierFromCredits, userTierOverride, isBlockedModel, titleizeModelId, type PriceTier, type UsageSummary } from "./costs";
 import { FEATURED_UIDS } from "./featured";
+import { powerScore } from "./ranks";
 
 const WINDSURF_PROXY_HOST = "127.0.0.1";
 const WINDSURF_PROXY_PORT = 42100;
@@ -63,7 +65,7 @@ export interface ModelListItem {
 }
 
 // Sort order: featured first (in list order), then promo/free, cheap → expensive, unknown last.
-const TIER_ORDER: Record<PriceTier, number> = { free: 0, "$": 1, "$$": 2, "$$$": 3, unknown: 4 };
+const TIER_ORDER: Record<PriceTier, number> = { free: 0, promo: 1, "$": 2, "$$": 3, "$$$": 4, unknown: 5 };
 
 function featuredRank(uid: string): number {
   const idx = FEATURED_UIDS.indexOf(uid);
@@ -81,12 +83,24 @@ function featuredIndent(uid: string): string {
 
 // Tier for a live model: tiers.json override wins, then promo → free,
 // then Windsurf's credits-per-prompt, then "unknown".
+/** Coerce a tiers.json value to a display tier ("blocked" never reaches here). */
+function asTier(v: ReturnType<typeof userTierOverride>): PriceTier {
+  return v !== undefined && v !== "blocked" ? v : "unknown";
+}
+
 function tierForLiveModel(m: UserStatusModel): PriceTier {
   const override = userTierOverride(m.uid);
-  if (override) return override;
-  if (isPromoActive(m)) return "free";
+  if (override !== undefined && override !== "blocked") return override;
+  if (isActuallyFreePromo(m)) return "free";
+  if (isPromoActive(m)) return "promo";
   if (m.creditsPerPrompt !== undefined) return tierFromCredits(m.creditsPerPrompt);
   return "unknown";
+}
+
+/** Rank badge for a model id: " ★76" or "" when no score is known. */
+async function rankAnnotation(uid: string): Promise<string> {
+  const score = await powerScore(uid);
+  return score !== undefined ? ` ★${Math.round(score)}` : "";
 }
 
 export async function buildModelList(): Promise<ModelListItem[]> {
@@ -109,9 +123,9 @@ export async function buildModelList(): Promise<ModelListItem[]> {
       if (status.models.size > 0) {
         liveOk = true;
         for (const m of status.models.values()) {
-          if (m.disabled) continue;
+          if (m.disabled || isBlockedModel(m.uid)) continue;
           const tier = tierForLiveModel(m);
-          const label = `${featuredIndent(m.uid)}${m.label}${tierAnnotation(tier)}`;
+          const label = `${featuredIndent(m.uid)}${m.label}${await rankAnnotation(m.uid)}${tierAnnotation(tier)}`;
           push(m.uid, label, tier, m.contextWindow);
         }
       }
@@ -124,10 +138,10 @@ export async function buildModelList(): Promise<ModelListItem[]> {
         const catalog = await getCachedCatalog(creds.apiKey, creds.apiServerUrl);
         if (catalog) {
           for (const [uid, entry] of catalog.byUid) {
-            if (entry.disabled) continue;
-            const tier = userTierOverride(uid) ?? "unknown";
+            if (entry.disabled || isBlockedModel(uid)) continue;
+            const tier = asTier(userTierOverride(uid));
             const base = entry.label && entry.label !== uid ? entry.label : titleizeModelId(uid);
-            push(uid, `${featuredIndent(uid)}${base}${tierAnnotation(tier)}`, tier);
+            push(uid, `${featuredIndent(uid)}${base}${await rankAnnotation(uid)}${tierAnnotation(tier)}`, tier);
           }
         }
       } catch {}
@@ -175,7 +189,7 @@ function tierForModel(uid: string): PriceTier {
   const status = getCachedUserStatus();
   const m = status?.models.get(uid);
   if (m) return tierForLiveModel(m);
-  return userTierOverride(uid) ?? "unknown";
+  return asTier(userTierOverride(uid));
 }
 
 function logCost(modelId: string, usage: UsageSummary | null): void {
@@ -308,6 +322,9 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
       }
 
       const rawBody = await getBody(req);
+      if (process.env.WINDSURF_DEBUG_REQ) {
+        try { fs.writeFileSync(`/tmp/ws-req-${Date.now()}.json`, JSON.stringify(JSON.parse(rawBody), null, 1)); } catch {}
+      }
       let requestBody: ChatCompletionRequest;
       try { requestBody = JSON.parse(rawBody); }
       catch { res.writeHead(400, { "Content-Type": "application/json" }); res.end(JSON.stringify({ error: { message: "Malformed JSON." } })); return; }
@@ -363,7 +380,7 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
           let finishReason: "stop" | "tool_calls" | "length" | "content_filter" | null = null;
           let usage: { promptTokens?: number; completionTokens?: number; totalTokens?: number } | null = null;
 
-          for await (const ev of streamChatEvents({
+          for await (const ev of streamChatEventsWithRetry({
             apiKey: creds.apiKey,
             apiServerUrl: creds.apiServerUrl,
             modelUid,
@@ -404,7 +421,11 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
             }
           }
 
-          const finalReason = finishReason ?? (toolCallIndex >= 0 ? "tool_calls" : "stop");
+          // Cognition sometimes reports "stop" even when the model made tool
+          // calls — clients (Zed) would end the turn without executing them.
+          const finalReason = toolCallIndex >= 0 && (finishReason === null || finishReason === "stop")
+            ? "tool_calls"
+            : finishReason ?? (toolCallIndex >= 0 ? "tool_calls" : "stop");
           const finishChunk = { id: responseId, object: "chat.completion.chunk", created: Math.floor(Date.now() / 1000), model: requestBody.model ?? modelUid, choices: [{ index: 0, delta: {}, finish_reason: finalReason }] };
           res.write(`data: ${JSON.stringify(finishChunk)}\n\n`);
 
@@ -417,6 +438,7 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
           logCost(modelUid, usage);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : "Unknown error";
+          console.error(`[windsurf] CHAT ERROR (${modelUid}): ${errorMessage}`);
           try {
             res.write(`data: ${JSON.stringify({ error: { message: errorMessage } })}\n\n`);
             const fChunk = { id: responseId, object: "chat.completion.chunk", created: Math.floor(Date.now() / 1000), model: requestBody.model ?? modelUid, choices: [{ index: 0, delta: {}, finish_reason: "stop" }] };
@@ -436,7 +458,7 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
 
         const abort = new AbortController();
         req.on("close", () => { if (!res.writableEnded) abort.abort(); });
-        for await (const ev of streamChatEvents({
+        for await (const ev of streamChatEventsWithRetry({
           apiKey: creds.apiKey,
           apiServerUrl: creds.apiServerUrl,
           modelUid,
@@ -476,6 +498,7 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
     res.end(JSON.stringify({ error: { message: `Unsupported path: ${url.pathname}` } }));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    console.error(`[windsurf] REQUEST ERROR: ${message}`);
     try {
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: { message } }));

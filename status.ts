@@ -40,6 +40,15 @@ export function isPromoActive(m: UserStatusModel, now = Date.now()): boolean {
   return m.promoUntil !== undefined && m.promoUntil * 1000 > now;
 }
 
+/** Promo models Windsurf markets as actually free ("Free through …" banners —
+ *  Cognition-internal SWE line). Other promo windows are just heavily
+ *  discounted, not zero — the plugin still shows credits for them. */
+const ACTUALLY_FREE_PROMO_PREFIXES = ["swe-"];
+
+export function isActuallyFreePromo(m: UserStatusModel, now = Date.now()): boolean {
+  return isPromoActive(m, now) && ACTUALLY_FREE_PROMO_PREFIXES.some(p => m.uid.toLowerCase().startsWith(p));
+}
+
 export interface UserStatus {
   models: Map<string, UserStatusModel>;
   planName?: string;

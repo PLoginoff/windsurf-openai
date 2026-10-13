@@ -167,15 +167,54 @@ function collapseSystemIntoUser(messages: ChatHistoryItem[]): ChatHistoryItem[] 
 
 const MAX_TOOL_DESC_LEN = 6998;
 
+// ----------------------------------------------------------------------------
+// Tool schema sanitization
+// ----------------------------------------------------------------------------
+// Cognition's Gemini routing chokes on JSON-Schema union types
+// (e.g. `"type": ["string", "null"]` — Zed sends those for optional fields)
+// and answers "There is an issue with this request". Flatten any type union
+// to its first non-null member, recursively through the whole schema.
+
+function sanitizeSchemaValue(v: unknown): unknown {
+  if (Array.isArray(v)) {
+    // "type" unions: ["string","null"] → "string"
+    const nonNull = v.filter(t => t !== "null");
+    if (nonNull.length === 1) return nonNull[0];
+    if (nonNull.length === 0) return "string";
+    return nonNull;
+  }
+  if (v && typeof v === "object") return sanitizeToolSchema(v as Record<string, unknown>);
+  return v;
+}
+
+export function sanitizeToolSchema(schema: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(schema)) {
+    if (k === "type" && Array.isArray(v)) {
+      out[k] = sanitizeSchemaValue(v);
+    } else if (v && typeof v === "object") {
+      out[k] = Array.isArray(v)
+        ? (v as unknown[]).map(sanitizeSchemaValue)
+        : sanitizeToolSchema(v as Record<string, unknown>);
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 function encodeToolDef(tool: ToolDef): Buffer {
   const rawDesc = tool.description ?? "";
   const desc = rawDesc.length > MAX_TOOL_DESC_LEN
     ? rawDesc.slice(0, MAX_TOOL_DESC_LEN - 24) + "\n…(truncated for cloud)"
     : rawDesc;
+  const params = tool.parameters && typeof tool.parameters === "object"
+    ? sanitizeToolSchema(tool.parameters as Record<string, unknown>)
+    : {};
   return Buffer.concat([
     encodeString(1, tool.name),
     encodeString(2, desc),
-    encodeString(3, JSON.stringify(tool.parameters ?? {})),
+    encodeString(3, JSON.stringify(params)),
   ]);
 }
 
@@ -360,6 +399,45 @@ function decodeUsageBlock(buf: Buffer): CloudChatEvent | null {
 // ----------------------------------------------------------------------------
 
 const TRACE_ID_RE = /\(trace ID: ([0-9a-f]+)\)/i;
+
+/** Errors worth retrying: Cognition's transient routing failures. */
+function isTransientChatError(e: unknown): boolean {
+  if (!(e instanceof CloudChatError)) return false;
+  const m = e.message.toLowerCase();
+  return (
+    /issue with this request/.test(m) ||
+    /an internal error occurred/.test(m) ||
+    e.code === "unavailable" ||
+    e.code === "internal"
+  );
+}
+
+const CHAT_RETRIES = 2;
+const CHAT_RETRY_DELAY_MS = 700;
+
+/** streamChatEvents with up to 2 retries on transient Cognition errors
+ *  ("There is an issue with this request" / internal errors). Only retries
+ *  if nothing has been yielded to the client yet — mid-stream restarts
+ *  would duplicate output. */
+export async function* streamChatEventsWithRetry(req: CloudChatRequest): AsyncGenerator<CloudChatEvent> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= CHAT_RETRIES; attempt++) {
+    let yielded = false;
+    try {
+      for await (const ev of streamChatEvents(req)) {
+        yielded = true;
+        yield ev;
+      }
+      return; // completed clean
+    } catch (e) {
+      lastError = e;
+      if (yielded || !isTransientChatError(e) || req.signal?.aborted || attempt === CHAT_RETRIES) throw e;
+      console.error(`[windsurf] transient chat error (attempt ${attempt + 1}/${CHAT_RETRIES + 1}), retrying in ${CHAT_RETRY_DELAY_MS}ms: ${e instanceof Error ? e.message.slice(0, 120) : String(e)}`);
+      await new Promise(r => setTimeout(r, CHAT_RETRY_DELAY_MS));
+    }
+  }
+  throw lastError;
+}
 
 export async function* streamChatEvents(req: CloudChatRequest): AsyncGenerator<CloudChatEvent> {
   const host = (req.apiServerUrl ?? "https://server.codeium.com").replace(/\/$/, "");

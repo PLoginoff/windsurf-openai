@@ -2,6 +2,8 @@
 
 Standalone proxy that exposes **Windsurf/Cognition/Devin models as a plain OpenAI API** — plug them into Zed, or any OpenAI-compatible client, using your existing Windsurf subscription.
 
+The main point of this proxy isn't just bridging the protocol — it's **giving you instant clarity on what to use right now**. Windsurf has 200+ models with hidden credit costs, shifting promo windows, and wildly varying capability. This proxy decorates every model name with its **power rank and cost tier** (`Kimi K3 High ★76 $`, `SWE-2 High ★74 free`), pins top picks on top, and comes with a `recommend` command that highlights the real freebies, best-value models, and overpriced traps at a glance.
+
 Based on [pi-windsurf](https://github.com/ktappdev/pi-windsurf) (originally a Pi extension), reworked into a pure proxy.
 
 ![windsurf-openai — Windsurf models in Zed's model picker](screenshot.png)
@@ -13,7 +15,9 @@ A Windsurf subscription gives you access to Claude, GPT, Gemini, Kimi, SWE, GLM 
 - **No Windsurf IDE needed** — OAuth once, then it's just a localhost HTTP service
 - **Zero dependencies** — plain Node/tsx, no npm packages
 - **Live model list** — fetched from Windsurf itself (`GetUserStatus`), not a hardcoded table; new models appear automatically
-- **Cost tiers in the names** — Windsurf publishes no pricing, but its API leaks credits-per-prompt and promo windows; the proxy surfaces them as `($)`/`($$)`/`($$$)`/`(free)` right in the model list, so you know what you're spending
+- **Cost tiers in the names** — Windsurf publishes no pricing, but its API leaks credits-per-prompt and promo windows; the proxy surfaces them as `$`/`$$`/`$$$`/`promo`/`free` right in the model list, so you know what you're spending
+- **Power rankings** — each model gets a `★NN` badge (Artificial Analysis index via OpenRouter's public API; SWE models are hand-estimated, override via `ranks.json`)
+- **`recommend` command** — one-shot digest: what's free right now, best value, best power-per-credit, and what's overpriced
 - **Zed native** — works with Zed's built-in `llama.cpp` provider: model list auto-populates with context windows, featured models pinned on top
 
 There are alternatives ([WindsurfAPI](https://github.com/dwgx/WindsurfAPI), `windsurf2api` variants, etc.) — I tried them and none quite fit: some bundle a heavy runtime, some hardcode stale model lists, most skip Zed's auto-discovery entirely, and none show what each model costs. This one stays small, dependency-free, and honest about pricing.
@@ -49,7 +53,7 @@ Use the **llama.cpp provider** (settings key: `"llama.cpp"`, URL has no `/v1` �
 }
 ```
 
-Restart Zed — the model list appears automatically: a few **featured models pinned on top** (edit `FEATURED_UIDS` in `featured.ts` to taste), then promo/free, then `($)` → `($$)` → `($$$)`, with per-model context windows. No API key needed on localhost.
+Restart Zed — the model list appears automatically: a few **featured models pinned on top** (edit `FEATURED_UIDS` in `featured.ts` to taste), then promo/free, then `$` → `$$` → `$$$`, with per-model context windows. No API key needed on localhost.
 
 Other editors: point any OpenAI-compatible client at `http://127.0.0.1:42100/v1` (auth: Bearer key from `cli.ts status` for non-localhost clients).
 
@@ -61,6 +65,7 @@ Other editors: point any OpenAI-compatible client at `http://127.0.0.1:42100/v1`
 | `login` / `logout` | Browser OAuth / remove credentials |
 | `status` | Show saved credentials |
 | `models` | List models with cost tiers (`--zed` → ready-to-paste JSON) |
+| `recommend` | What to use right now — freebies, value picks, power picks (`--all` → full table) |
 | `probe` | Dump Windsurf's raw per-model credits + prices |
 
 ## Cost tiers
@@ -69,11 +74,18 @@ Windsurf exposes no public pricing. Tiers come from its own `GetUserStatus` data
 
 | Tier | Meaning |
 |---|---|
-| `(free)` | active promo window or 0 credits — verified from Windsurf |
-| `($)` / `($$)` / `($$$)` | <10 / <100 / ≥100 credits per prompt |
-| `(unknown)` | no credits data (new models — override via `tiers.json`) |
+| `free` | 0-credit promo as marketed by Windsurf (the SWE line) — real freebie while the window lasts |
+| `promo` | discounted window — very cheap, but still per-prompt credits |
+| `$` / `$$` / `$$$` | <10 / <100 / ≥100 credits per prompt |
+| `unknown` | no credits data (new models — override via `tiers.json`) |
 
-Override any tier via `tiers.json` next to the CLI.
+The `★NN` badge after the name is the model's power score — Artificial Analysis coding/intelligence index fetched from OpenRouter's public models API at startup (12h cache). Models not on OpenRouter (Cognition-internal SWE) get hand-estimated scores. Override or add via `ranks.json` next to the CLI:
+
+```json
+{ "claude-opus-5-5-max": 59, "some-brand-new-model": 45 }
+```
+
+Override any tier via `tiers.json` next to the CLI (value `"blocked"` hides a model entirely).
 
 ## Behind a proxy
 

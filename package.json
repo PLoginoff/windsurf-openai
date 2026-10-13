@@ -31,6 +31,7 @@
     "status": "npx tsx cli.ts status",
     "logout": "npx tsx cli.ts logout",
     "models": "npx tsx cli.ts models",
+    "recommend": "npx tsx cli.ts recommend",
     "probe": "npx tsx cli.ts probe"
   },
   "files": [
