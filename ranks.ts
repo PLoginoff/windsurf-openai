@@ -97,7 +97,7 @@ interface OrCatalog {
 }
 
 let cached: OrCatalog | null = null;
-let inFlight: Promise<OrCatalog> | null = null;
+let inFlight: Promise<OrCatalog | null> | null = null;
 
 interface OrRawModel {
   id: string;
@@ -163,6 +163,22 @@ export async function lookupOrInfo(uid: string): Promise<OrModelInfo | null> {
   const orId = WINDSURF_TO_OR[baseUid(uid)];
   if (!orId) return null;
   return or.byId.get(orId) ?? null;
+}
+
+// ----------------------------------------------------------------------------
+// Release dates for models with no OpenRouter counterpart (SWE line).
+// Epoch seconds, from Windsurf's "Free through …" promo announcements.
+// ----------------------------------------------------------------------------
+
+const MANUAL_CREATED: Record<string, number> = {
+  "swe-2": Math.floor(new Date("2026-08-25").getTime() / 1000),   // fresh (~7wk)
+  "swe-1-7": Math.floor(new Date("2026-03-15").getTime() / 1000), // aging
+  "swe-1-7-lightning": Math.floor(new Date("2026-03-15").getTime() / 1000),
+  "swe-1-6": Math.floor(new Date("2026-02-10").getTime() / 1000),
+};
+
+export function manualCreated(uid: string): number | undefined {
+  return MANUAL_CREATED[baseUid(uid)];
 }
 
 /** Strip Windsurf suffixes: effort levels, -fast, :variant, -1m, legacy prefixes. */
@@ -234,6 +250,9 @@ export function clearSpeedsCache(): void {
 
 /** Speed stats for a Windsurf uid via the OR mapping. Null when unknown. */
 export function speedInfo(uid: string): SpeedInfo | null {
+  // SWE models aren't on OpenRouter — hand-set a realistic 100 tps
+  // (they're Cognition's own fast agentic line, feels right in practice).
+  if (baseUid(uid).startsWith("swe-")) return { tpsMedian: 100 };
   const orId = WINDSURF_TO_OR[baseUid(uid)];
   if (!orId) return null;
   return loadSpeeds()[orId] ?? null;

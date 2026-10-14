@@ -27,9 +27,9 @@
 
 | Tier | Score | Credits | WS $/1M in/out | OR $/1M in/out | Age | TPS | Model |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| FREE | 50 | 0 | - | - | - | - | SWE-2 Medium |
-| FREE | 50 | 0 | - | - | - | - | SWE-2 High |
-| FREE | 50 | 0 | - | - | - | - | SWE-2 Max |
+| FREE | 50 | 0 | - | - | fresh | 100 | SWE-2 Medium |
+| FREE | 50 | 0 | - | - | fresh | 100 | SWE-2 High |
+| FREE | 50 | 0 | - | - | fresh | 100 | SWE-2 Max |
 | PROMO | 76 | 6 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.7 Flash Low |
 | PROMO | 76 | 6 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.8 Flash Low |
 | PROMO | 76 | 8 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.8 Flash Medium |
@@ -166,12 +166,12 @@
 |  | 43 | 5 | 0.1/0.5 | 0.1/0.5 | new | 150 | Claude Haiku 5.5 High |
 |  | 43 | 8 | 0.1/0.5 | 0.1/0.5 | new | 150 | Claude Haiku 5.5 XHigh |
 |  | 43 | 10 | 0.1/0.5 | 0.1/0.5 | new | 150 | Claude Haiku 5.5 Max |
-|  | 42 | 3 | 0.5/2.5 | - | - | - | SWE-1.7 Medium |
-|  | 42 | 9 | 0.5/2.5 | - | - | - | SWE-1.7 Max |
+|  | 42 | 3 | 0.5/2.5 | - | aging | 100 | SWE-1.7 Medium |
+|  | 42 | 9 | 0.5/2.5 | - | aging | 100 | SWE-1.7 Max |
 |  | 40 | 2 | 0.22/0.66 | 0.02/0.89 | fresh | 87 | DeepSeek V4.1 Flash High |
 |  | 40 | 3 | 0.22/0.66 | 0.02/0.89 | fresh | 87 | DeepSeek V4.1 Flash Max |
-|  | 39 | 9 | 2.5/12.5 | - | - | - | SWE-1.7 Lightning Medium |
-|  | 39 | 18 | 2.5/12.5 | - | - | - | SWE-1.7 Lightning Max |
+|  | 39 | 9 | 2.5/12.5 | - | aging | 100 | SWE-1.7 Lightning Medium |
+|  | 39 | 18 | 2.5/12.5 | - | aging | 100 | SWE-1.7 Lightning Max |
 |  | 34 | 2 | 1.5/9 | 1.5/9 | fresh | 128 | Gemini 3.5 Flash Minimal |
 |  | 34 | 2 | 1.5/7.5 | 1.5/9 | fresh | 128 | Gemini 3.6 Flash Minimal |
 |  | 34 | 4 | 1.5/9 | 1.5/9 | fresh | 128 | Gemini 3.5 Flash Low |
@@ -181,8 +181,8 @@
 |  | 34 | 9 | 1.5/9 | 1.5/9 | fresh | 128 | Gemini 3.5 Flash High |
 |  | 34 | 9 | 1.5/7.5 | 1.5/9 | fresh | 128 | Gemini 3.6 Flash High |
 |  | 33 | 1 | 1.25/10 | 1.25/10 | aging | 75 | Gemini 2.5 Pro |
-|  | 33 | 3 | 0.5/2.5 | - | - | - | SWE-1.6 |
-|  | 33 | 3 | 0.5/2.5 | - | - | - | SWE-1.6 Fast |
+|  | 33 | 3 | 0.5/2.5 | - | aging | 100 | SWE-1.6 |
+|  | 33 | 3 | 0.5/2.5 | - | aging | 100 | SWE-1.6 Fast |
 |  | 33 | 1.5 | 1.75/14 | 1.75/14 | aging | 51 | GPT-5.3-Codex Low |
 |  | 33 | 2 | 1.75/14 | 1.75/14 | aging | 51 | GPT-5.3-Codex Medium |
 |  | 33 | 2.5 | 1.75/14 | 1.75/14 | aging | 51 | GPT-5.3-Codex High |

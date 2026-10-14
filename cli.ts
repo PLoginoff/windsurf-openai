@@ -25,7 +25,7 @@ import { clearCachedUserJwt } from "./auth";
 import { clearSessionIds, streamChatEvents } from "./chat";
 import { getUserStatus, isPromoActive, isActuallyFreePromo, clearCachedUserStatus } from "./status";
 import { isBlockedModel } from "./costs";
-import { powerScore, getOrCatalog, lookupOrInfo, speedClass, speedInfo, collectSpeeds } from "./ranks";
+import { powerScore, getOrCatalog, lookupOrInfo, speedClass, speedInfo, collectSpeeds, manualCreated } from "./ranks";
 import { clearCachedCatalog } from "./catalog";
 
 const DEFAULT_PORT = 42100;
@@ -212,7 +212,7 @@ async function cmdRecommend(all: boolean, md = false): Promise<void> {
       free: isActuallyFreePromo(m),
       promo: isPromoActive(m) && !isActuallyFreePromo(m),
       wsIn: m.pricing?.input, wsOut: m.pricing?.output,
-      created: info?.created,
+      created: info?.created ?? manualCreated(m.uid),
       speed: speedClass(m.uid),
       tps: speedInfo(m.uid)?.tpsMedian,
     });
@@ -321,7 +321,7 @@ async function cmdRecommend(all: boolean, md = false): Promise<void> {
   const premium = rest.filter(r => effectiveCredits(r) > 60).sort(byScore);
 
   const promoTill = promo.length
-    ? new Date(Math.max(...status.models.values().filter(isPromoActive).map(m => (m.promoUntil ?? 0) * 1000)))
+    ? new Date(Math.max(...[...status.models.values()].filter(isPromoActive).map(m => (m.promoUntil ?? 0) * 1000)))
         .toISOString().slice(0, 10)
     : "";
 
