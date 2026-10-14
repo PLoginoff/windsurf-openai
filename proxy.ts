@@ -10,6 +10,7 @@ import * as fs from "fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "http";
 import { streamChatEventsWithRetry, CloudChatError, type ChatHistoryItem, type ToolDef } from "./chat";
 import { loadCredentials } from "./oauth";
+import { authenticateKey, type KeyPolicy } from "./keys";
 import { getCachedCatalog } from "./catalog";
 import { getUserStatus, getCachedUserStatus, isPromoActive, isActuallyFreePromo, type UserStatusModel } from "./status";
 import { stripCostAnnotation, tierAnnotation, tierFromCredits, userTierOverride, isBlockedModel, titleizeModelId, type PriceTier, type UsageSummary } from "./costs";
@@ -113,13 +114,21 @@ async function rankAnnotation(uid: string): Promise<string> {
   return score !== undefined ? ` ★${Math.round(score)}` : "";
 }
 
-export async function buildModelList(): Promise<ModelListItem[]> {
+export async function buildModelList(maxCredits?: number): Promise<ModelListItem[]> {
   const out: ModelListItem[] = [];
   const seen = new Set<string>();
   const push = (uid: string, label: string, tier: PriceTier, contextWindow?: number): void => {
     if (seen.has(uid)) return;
     seen.add(uid);
     out.push({ id: label, name: label, canonical: uid, tier, ...(contextWindow ? { contextWindow } : {}) });
+  };
+
+  // Per-key filter: with a max_credits limit, only free/promo and models
+  // costing ≤ limit credits/prompt are listed.
+  const withinLimit = (m: UserStatusModel): boolean => {
+    if (maxCredits === undefined || maxCredits <= 0) return true;
+    if (isActuallyFreePromo(m) || isPromoActive(m)) return true;
+    return (m.creditsPerPrompt ?? 0) <= maxCredits;
   };
 
   // Live account data — GetUserStatus (the endpoint the Windsurf plugin uses):
@@ -133,7 +142,7 @@ export async function buildModelList(): Promise<ModelListItem[]> {
       if (status.models.size > 0) {
         liveOk = true;
         for (const m of status.models.values()) {
-          if (m.disabled || isBlockedModel(m.uid)) continue;
+          if (m.disabled || isBlockedModel(m.uid) || !withinLimit(m)) continue;
           const tier = tierForLiveModel(m);
           const label = `${featuredIndent(m.uid)}${m.label}${await rankAnnotation(m.uid)}${tierAnnotation(tier)}`;
           push(m.uid, label, tier, m.contextWindow);
@@ -216,7 +225,7 @@ function isLoopbackAddress(addr: string | undefined): boolean {
   return addr === "127.0.0.1" || addr === "::1" || addr === "::ffff:127.0.0.1";
 }
 
-async function authorizeRequest(req: IncomingMessage): Promise<{ status: number; body: string; contentType: string } | null> {
+async function authorizeRequest(req: IncomingMessage): Promise<{ status: number; body: string; contentType: string; keyPolicy?: KeyPolicy } | null> {
   const authHeader = (req.headers.authorization ?? "") as string;
   const ip = req.socket.remoteAddress;
 
@@ -230,6 +239,10 @@ async function authorizeRequest(req: IncomingMessage): Promise<{ status: number;
   }
   const presented = authHeader.slice("Bearer ".length);
   const presentedBuf = Buffer.from(presented, "utf8");
+
+  // keys.json policies first (per-key model restrictions)
+  const policy = authenticateKey(presented);
+  if (policy) return { status: 0, body: "", contentType: "", keyPolicy: policy };
 
   // Check custom proxy key if configured (--key or WINDSURF_PROXY_KEY)
   const proxyKey = getProxyKey();
@@ -278,7 +291,15 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
     // These leak nothing (model names/tiers only, localhost-bound); chat still
     // requires the Bearer key.
     if (req.method === "GET" && (url.pathname === "/v1/models" || url.pathname === "/models")) {
-      const items = await buildModelList();
+      // If the client sent a Bearer key from keys.json with a max_credits limit,
+      // filter the list to models within that budget. No key → full list.
+      const authHeader = (req.headers.authorization ?? "") as string;
+      let maxCredits: number | undefined;
+      if (authHeader.startsWith("Bearer ")) {
+        const policy = authenticateKey(authHeader.slice("Bearer ".length));
+        if (policy?.max_credits !== undefined && policy.max_credits > 0) maxCredits = policy.max_credits;
+      }
+      const items = await buildModelList(maxCredits);
       const created = Math.floor(Date.now() / 1000);
       const data = items.map(m => ({
         id: m.id,
@@ -328,12 +349,13 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
     }
 
     // Auth gate for everything else
-    const authErr = await authorizeRequest(req);
-    if (authErr) {
-      res.writeHead(authErr.status, { "Content-Type": authErr.contentType });
-      res.end(authErr.body);
+    const auth = await authorizeRequest(req);
+    if (auth && auth.status !== 0) {
+      res.writeHead(auth.status, { "Content-Type": auth.contentType });
+      res.end(auth.body);
       return;
     }
+    const keyPolicy = auth?.keyPolicy;
 
     // /v1/chat/completions
     if (url.pathname === "/v1/chat/completions" || url.pathname === "/chat/completions") {
@@ -370,6 +392,19 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
         res.writeHead(400, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: { message: "Missing 'model' in request body." } }));
         return;
+      }
+
+      // Per-key model restriction: max credits-per-prompt (free/promo always pass)
+      if (keyPolicy?.max_credits !== undefined && keyPolicy.max_credits > 0) {
+        const status = getCachedUserStatus();
+        const m = status?.models.get(modelUid);
+        const credits = m?.creditsPerPrompt ?? 0;
+        const isFree = m ? isActuallyFreePromo(m) || isPromoActive(m) : false;
+        if (!isFree && credits > keyPolicy.max_credits) {
+          res.writeHead(403, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: { message: `Model not allowed for this key: costs ${credits} credits/prompt, limit is ${keyPolicy.max_credits}. Pick a cheaper model.`, type: "windsurf_error" } }));
+          return;
+        }
       }
 
       const tools: ToolDef[] = (requestBody.tools ?? []).map(t => ({

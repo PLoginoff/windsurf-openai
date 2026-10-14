@@ -25,32 +25,34 @@ import { clearCachedUserJwt } from "./auth";
 import { clearSessionIds, streamChatEvents } from "./chat";
 import { getUserStatus, isPromoActive, isActuallyFreePromo, clearCachedUserStatus } from "./status";
 import { isBlockedModel } from "./costs";
-import { powerScore, getOrCatalog, lookupOrInfo } from "./ranks";
+import { powerScore, getOrCatalog, lookupOrInfo, speedClass, speedInfo, collectSpeeds } from "./ranks";
 import { clearCachedCatalog } from "./catalog";
 
 const DEFAULT_PORT = 42100;
 const DEFAULT_HOST = "127.0.0.1";
 
-function parseArgs(argv: string[]): { command: string; port: number; host: string; key?: string; zed: boolean; all: boolean } {
+function parseArgs(argv: string[]): { command: string; port: number; host: string; key?: string; zed: boolean; all: boolean; md: boolean } {
   let command = "serve";
   let port = DEFAULT_PORT;
   let host = DEFAULT_HOST;
   let key: string | undefined;
   let zed = false;
   let all = false;
+  let md = false;
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--port" || a === "-p") { port = parseInt(argv[++i] ?? "", 10) || DEFAULT_PORT; }
+    else if (a.startsWith("--port=")) { port = parseInt(a.slice("--port=".length), 10) || DEFAULT_PORT; }
     else if (a === "--host" || a === "--bind") { host = argv[++i] ?? DEFAULT_HOST; }
     else if (a.startsWith("--host=") || a.startsWith("--bind=")) { host = a.slice(a.indexOf("=") + 1); }
     else if (a === "--key" || a === "-k") { key = argv[++i]; }
     else if (a.startsWith("--key=")) { key = a.slice("--key=".length); }
-    else if (a.startsWith("--port=")) { port = parseInt(a.slice("--port=".length), 10) || DEFAULT_PORT; }
     else if (a === "--zed") { zed = true; }
     else if (a === "--all") { all = true; }
+    else if (a === "--md") { md = true; }
     else if (!a.startsWith("--")) { command = a; }
   }
-  return { command, port, host, key, zed, all };
+  return { command, port, host, key, zed, all, md };
 }
 
 async function cmdServe(port: number, host: string, key?: string): Promise<void> {
@@ -188,7 +190,7 @@ function fmtPrice(n: number): string {
   return Number.isInteger(r) ? String(r) : String(r);
 }
 
-async function cmdRecommend(all: boolean): Promise<void> {
+async function cmdRecommend(all: boolean, md = false): Promise<void> {
   const c = loadCredentials();
   if (!c) {
     console.error("[windsurf] not signed in. Run: windsurf-openai login");
@@ -198,17 +200,21 @@ async function cmdRecommend(all: boolean): Promise<void> {
 
   const rows: Array<{
     uid: string; label: string; score?: number; credits?: number; free: boolean; promo: boolean;
-    wsIn?: number; wsOut?: number; orIn?: number; orOut?: number;
+    wsIn?: number; wsOut?: number; orIn?: number; orOut?: number; created?: number; speed?: string; tps?: number;
   }> = [];
   for (const m of status.models.values()) {
     if (m.disabled || isBlockedModel(m.uid)) continue;
     const score = await powerScore(m.uid);
+    const info = await lookupOrInfo(m.uid);
     rows.push({
       uid: m.uid, label: m.label, score,
       credits: m.creditsPerPrompt,
       free: isActuallyFreePromo(m),
       promo: isPromoActive(m) && !isActuallyFreePromo(m),
       wsIn: m.pricing?.input, wsOut: m.pricing?.output,
+      created: info?.created,
+      speed: speedClass(m.uid),
+      tps: speedInfo(m.uid)?.tpsMedian,
     });
   }
 
@@ -218,15 +224,38 @@ async function cmdRecommend(all: boolean): Promise<void> {
     if (info) { r.orIn = info.inputPer1M; r.orOut = info.outputPer1M; }
   }));
 
+  const ageStr = (created?: number): string => {
+    if (!created) return "-";
+    const days = Math.floor((Date.now() - created * 1000) / 86_400_000);
+    if (days < 31) return "new";
+    if (days < 183) return "fresh";
+    if (days < 548) return "aging";
+    return "old";
+  };
+
   const fmt = (n: number | undefined, digits = 2): string =>
     n === undefined ? "-" : n.toFixed(digits).replace(/\.?0+$/, "");
 
   const line = (r: typeof rows[number]): string => {
     const score = r.score !== undefined ? String(Math.round(r.score)).padStart(3) : "  ?";
-    const credits = r.credits !== undefined ? fmt(r.credits, 1).padStart(5) : "    ?";
+    // FREE models actually cost 0 credits — the listed creditsPerPrompt is
+    // Windsurf's future/extra-usage price, not what the subscriber pays now.
+    const credits = r.free ? "    0" : r.credits !== undefined ? fmt(r.credits, 1).padStart(5) : "    ?";
     const ws = r.wsIn !== undefined ? `${fmt(r.wsIn)}/${fmt(r.wsOut)}` : "-";
     const orr = r.orIn !== undefined ? `${fmt(r.orIn)}/${fmt(r.orOut)}` : "-";
-    return `${score}  ${credits}cr  ${ws.padEnd(16)}  ${orr.padEnd(16)}  ${r.label}`;
+    const age = ageStr(r.created).padEnd(5);
+    const tps = r.tps !== undefined ? `${String(Math.round(r.tps)).padStart(3)}tps` : "  ---";
+    return `${score}  ${credits}cr  ${ws.padEnd(16)}  ${orr.padEnd(16)}  ${age}  ${tps}  ${r.label}`;
+  };
+
+  // Markdown output for RECOMMENDATIONS.md (--md): GitHub renders tables
+  // with sortable columns automatically (click the header arrows).
+  const mdTable = (title: string, header: string[], rowsMd: string[][]): void => {
+    console.log(`## ${title}\n`);
+    console.log(`| ${header.join(" | ")} |`);
+    console.log(`|${header.map(() => " --- |").join("")}`);
+    for (const row of rowsMd) console.log(`| ${row.join(" | ")} |`);
+    console.log("");
   };
 
   if (all) {
@@ -238,9 +267,32 @@ async function cmdRecommend(all: boolean): Promise<void> {
       if (sa !== sb) return sb - sa;
       return (a.credits ?? 1e9) - (b.credits ?? 1e9);
     });
+
+    if (md) {
+      console.log(`> Snapshot for plan **${status.planName ?? "?"}**, ${rows.length} models, generated ${new Date().toISOString().slice(0, 10)}.\n`);
+      console.log(`> Regenerate: \`npx tsx cli.ts recommend --all --md\`. GitHub tables are sortable — click the arrows in a column header.\n`);
+      mdTable("All models", ["Tier", "Score", "Credits", "WS $/1M in/out", "OR $/1M in/out", "Age", "TPS", "Model"],
+        rows.map(r => [
+          r.free ? "FREE" : r.promo ? "PROMO" : "",
+          r.score !== undefined ? String(Math.round(r.score)) : "?",
+          r.free ? "0" : r.credits !== undefined ? fmt(r.credits, 1) : "?",
+          r.wsIn !== undefined ? `${fmt(r.wsIn)}/${fmt(r.wsOut)}` : "-",
+          r.orIn !== undefined ? `${fmt(r.orIn)}/${fmt(r.orOut)}` : "-",
+          ageStr(r.created),
+          r.tps !== undefined ? String(Math.round(r.tps)) : "-",
+          r.label,
+        ]));
+      console.log("**Score** — Artificial Analysis coding/intelligence index via OpenRouter (0-100).  ");
+      console.log("**FREE** — 0-credit promo as marketed by Windsurf (SWE). **PROMO** — discounted window, still per-prompt credits.  ");
+      console.log("**WS $/1M** — Windsurf extra-usage prices; **OR $/1M** — OpenRouter reference. SWE scores are estimates.  ");
+      console.log("**Age** — release date from OpenRouter: new <1mo, fresh <6mo, aging <18mo, old ≥18mo.  ");
+      console.log("**TPS** — median output tokens/sec across OpenRouter providers (speeds.json snapshot).\n");
+      return;
+    }
+
     console.log(`plan: ${status.planName ?? "?"}   models: ${rows.length} available\n`);
-    console.log("TIER    SCORE  CREDITS  WS $/1M (in/out)   OR $/1M (in/out)   MODEL");
-    console.log("-----   -----  -------  ----------------   ----------------   -----");
+    console.log("TIER    SCORE  CREDITS  WS $/1M (in/out)   OR $/1M (in/out)   AGE    TPS    MODEL");
+    console.log("-----   -----  -------  ----------------   ----------------   -----  -----  -----");
     for (const r of rows) {
       const tier = (r.free ? "FREE" : r.promo ? "PROMO" : "").padEnd(5);
       console.log(`${tier}  ${line(r)}`);
@@ -248,6 +300,8 @@ async function cmdRecommend(all: boolean): Promise<void> {
     console.log("\nSCORE — Artificial Analysis coding/intelligence index via OpenRouter (0-100).");
     console.log("FREE — 0-credit promo as marketed by Windsurf (SWE). PROMO — discounted window, still per-prompt credits.");
     console.log("WS $/1M — Windsurf extra-usage prices; OR $/1M — OpenRouter reference. SWE scores are estimates.");
+    console.log("AGE — release date from OpenRouter: new <1mo, fresh <6mo, aging <18mo, old ≥18mo.");
+    console.log("TPS — median output tokens/sec across OpenRouter providers (speeds.json snapshot; run `speeds` to refresh).");
     return;
   }
 
@@ -255,17 +309,75 @@ async function cmdRecommend(all: boolean): Promise<void> {
   const byScore = (a: typeof rows[number], b: typeof rows[number]) =>
     (b.score ?? -1) - (a.score ?? -1) || (a.credits ?? 1e9) - (b.credits ?? 1e9);
 
+  // Effective cost the subscriber pays now: FREE promos are 0 regardless of
+  // the creditsPerPrompt field (that's the future/extra-usage price).
+  const effectiveCredits = (r: typeof rows[number]): number => r.free ? 0 : (r.credits ?? 1e9);
+
   const free = rows.filter(r => r.free).sort(byScore);                  // genuinely 0 credits (SWE line)
   const promo = rows.filter(r => r.promo).sort(byScore);                // promo pricing: dirt cheap, but non-zero
   const rest = rows.filter(r => !r.free && !r.promo);
-  const value = rest.filter(r => (r.credits ?? 1e9) <= 10).sort(byScore);   // best bang for buck (≤10cr)
-  const power = rest.filter(r => (r.credits ?? 1e9) > 10 && (r.credits ?? 1e9) <= 60).sort(byScore);
-  const premium = rest.filter(r => (r.credits ?? 1e9) > 60).sort(byScore);
+  const value = rest.filter(r => effectiveCredits(r) <= 10).sort(byScore);   // best bang for buck (≤10cr)
+  const power = rest.filter(r => effectiveCredits(r) > 10 && effectiveCredits(r) <= 60).sort(byScore);
+  const premium = rest.filter(r => effectiveCredits(r) > 60).sort(byScore);
 
   const promoTill = promo.length
     ? new Date(Math.max(...status.models.values().filter(isPromoActive).map(m => (m.promoUntil ?? 0) * 1000)))
         .toISOString().slice(0, 10)
     : "";
+
+  // In --md mode the digest becomes section tables of the same picks.
+  if (md) {
+    const bucketTable = (title: string, picks: typeof rows, note: string): void => {
+      mdTable(title, ["Score", "Credits", "WS $/1M in/out", "OR $/1M in/out", "Age", "TPS", "Model"],
+        picks.slice(0, 5).map(r => [
+          r.score !== undefined ? String(Math.round(r.score)) : "?",
+          r.free ? "0" : r.credits !== undefined ? fmt(r.credits, 1) : "?",
+          r.wsIn !== undefined ? `${fmt(r.wsIn)}/${fmt(r.wsOut)}` : "-",
+          r.orIn !== undefined ? `${fmt(r.orIn)}/${fmt(r.orOut)}` : "-",
+          ageStr(r.created),
+          r.tps !== undefined ? String(Math.round(r.tps)) : "-",
+          r.label,
+        ]));
+      if (note) console.log(`_${note}_\n`);
+    };
+    console.log(`# Windsurf model recommendations\n`);
+    console.log(`> Snapshot for plan **${status.planName ?? "?"}**, ${rows.length} models, generated ${new Date().toISOString().slice(0, 10)}.\n`);
+    console.log(`> Regenerate: \`npx tsx cli.ts recommend --all --md > RECOMMENDATIONS.md\`. GitHub tables are sortable — click the arrows in a column header.\n`);
+    bucketTable("FREE (0 credits)", free, "Genuinely free — grab it while the promo window is open.");
+    bucketTable("PROMO (dirt cheap)", promo, `Heavy discount, but non-zero credits — active until ${promoTill}.`);
+    bucketTable("VALUE (≤10 credits)", value, "Best bang for the buck.");
+    bucketTable("POWER (10-60 credits)", power, "Serious muscle at a fair price.");
+    bucketTable("PREMIUM (60+ credits)", premium, "Pricey — save for the really hard stuff.");
+    const best = [...value].sort(byScore)[0];
+    const strongest = [...power].sort(byScore)[0];
+    if (best) console.log(`**Best value pick:** \"${best.label}\" (${effectiveCredits(best)}cr, score ${Math.round(best.score ?? 0)}).\n`);
+    if (strongest) console.log(`**Most power for the price:** \"${strongest.label}\" (${effectiveCredits(strongest)}cr, score ${Math.round(strongest.score ?? 0)}).\n`);
+    // Full flat table after the digest.
+    rows.sort((a, b) => {
+      if (a.free !== b.free) return a.free ? -1 : 1;
+      if (a.promo !== b.promo) return a.promo ? -1 : 1;
+      const sa = a.score ?? -1, sb = b.score ?? -1;
+      if (sa !== sb) return sb - sa;
+      return (a.credits ?? 1e9) - (b.credits ?? 1e9);
+    });
+    mdTable("All models", ["Tier", "Score", "Credits", "WS $/1M in/out", "OR $/1M in/out", "Age", "TPS", "Model"],
+      rows.map(r => [
+        r.free ? "FREE" : r.promo ? "PROMO" : "",
+        r.score !== undefined ? String(Math.round(r.score)) : "?",
+        r.free ? "0" : r.credits !== undefined ? fmt(r.credits, 1) : "?",
+        r.wsIn !== undefined ? `${fmt(r.wsIn)}/${fmt(r.wsOut)}` : "-",
+        r.orIn !== undefined ? `${fmt(r.orIn)}/${fmt(r.orOut)}` : "-",
+        ageStr(r.created),
+        r.tps !== undefined ? String(Math.round(r.tps)) : "-",
+        r.label,
+      ]));
+    console.log("**Score** — Artificial Analysis coding/intelligence index via OpenRouter (0-100).  ");
+    console.log("**FREE** — 0-credit promo as marketed by Windsurf (SWE). **PROMO** — discounted window, still per-prompt credits.  ");
+    console.log("**WS $/1M** — Windsurf extra-usage prices; **OR $/1M** — OpenRouter reference. SWE scores are estimates.  ");
+    console.log("**Age** — release date from OpenRouter: new <1mo, fresh <6mo, aging <18mo, old ≥18mo.  ");
+    console.log("**TPS** — median output tokens/sec across OpenRouter providers (speeds.json snapshot).\n");
+    return;
+  }
 
   const section = (title: string, picks: typeof rows, note: string): void => {
     console.log(`── ${title} ${note ? "— " + note : ""}`);
@@ -284,8 +396,8 @@ async function cmdRecommend(all: boolean): Promise<void> {
 
   const best = [...value].sort(byScore)[0];
   const strongest = [...power].sort(byScore)[0];
-  if (best) console.log(`Best value pick: go with "${best.label}" (${best.credits}cr, score ${Math.round(best.score ?? 0)}).`);
-  if (strongest) console.log(`Most power for the price: "${strongest.label}" (${strongest.credits}cr, score ${Math.round(strongest.score ?? 0)}).`);
+  if (best) console.log(`Best value pick: go with "${best.label}" (${effectiveCredits(best)}cr, score ${Math.round(best.score ?? 0)}).`);
+  if (strongest) console.log(`Most power for the price: "${strongest.label}" (${effectiveCredits(strongest)}cr, score ${Math.round(strongest.score ?? 0)}).`);
   console.log("\nSCORE — Artificial Analysis index via OpenRouter. CREDITS — Windsurf per prompt.");
   console.log("WS $/1M — Windsurf extra-usage; OR $/1M — reference market price. Full list: recommend --all");
 }
@@ -337,15 +449,24 @@ async function cmdProbe(): Promise<void> {
   } catch (e) { console.log("  ERR:", e instanceof Error ? e.message : String(e)); }
 }
 
+async function cmdSpeeds(): Promise<void> {
+  console.error("[windsurf] collecting provider speed stats from OpenRouter model pages…");
+  const ok = await collectSpeeds((done, total, orId) => {
+    if (done % 10 === 0 || done === total) console.error(`[windsurf] ${done}/${total} ${orId}`);
+  });
+  console.log(`[windsurf] speeds.json updated: ${ok} models with stats`);
+}
+
 async function main(): Promise<void> {
-  const { command, port, host, key, zed, all } = parseArgs(process.argv.slice(2));
+  const { command, port, host, key, zed, all, md } = parseArgs(process.argv.slice(2));
   switch (command) {
     case "serve": await cmdServe(port, host, key); break;
     case "login": await cmdLogin(); break;
     case "status": cmdStatus(); break;
     case "logout": cmdLogout(); break;
     case "models": await cmdModels(zed); break;
-    case "recommend": await cmdRecommend(all); break;
+    case "recommend": await cmdRecommend(all, md); break;
+    case "speeds": await cmdSpeeds(); break;
     case "probe": await cmdProbe(); break;
     case "help":
     case "--help":
@@ -369,6 +490,7 @@ Usage:
   npx tsx cli.ts logout
   npx tsx cli.ts models
   npx tsx cli.ts recommend
+  npx tsx cli.ts speeds
   npx tsx cli.ts probe
 
 Commands:
@@ -379,6 +501,8 @@ Commands:
   models  Print the known model list with approximate pricing
   recommend  Power-vs-cost table: merges Windsurf promos/credits with
           OpenRouter benchmarks ( Artificial Analysis ) — shows what to use now
+  speeds  Scrape per-provider throughput (tps) from OpenRouter model pages
+          into speeds.json — refresh occasionally, it's a slow one-time crawl
   probe   Dump Windsurf's raw per-model credits + prices from GetUserStatus,
           then log every usage metric from one tiny chat request
 

@@ -23,6 +23,10 @@ export interface OrModelInfo {
   inputPer1M?: number;
   /** USD per 1M output tokens on OpenRouter. */
   outputPer1M?: number;
+  /** OR release timestamp (epoch seconds) — powers the AGE column. */
+  created?: number;
+  /** First sentence of OpenRouter's description. */
+  description?: string;
 }
 
 const OR_MODELS_URL = "https://openrouter.ai/api/v1/models";
@@ -97,6 +101,8 @@ let inFlight: Promise<OrCatalog> | null = null;
 
 interface OrRawModel {
   id: string;
+  created?: number;
+  description?: string;
   pricing?: { prompt?: string; completion?: string };
   benchmarks?: {
     artificial_analysis?: { intelligence_index?: number; coding_index?: number };
@@ -129,6 +135,10 @@ async function fetchOrCatalog(): Promise<OrCatalog> {
       score: score !== undefined && !Number.isNaN(score) ? score : undefined,
       inputPer1M: inputPer1M !== undefined && !Number.isNaN(inputPer1M) ? inputPer1M : undefined,
       outputPer1M: outputPer1M !== undefined && !Number.isNaN(outputPer1M) ? outputPer1M : undefined,
+      created: typeof m.created === "number" ? m.created : undefined,
+      description: typeof m.description === "string" && m.description.length > 0
+        ? m.description.split(". ")[0]
+        : undefined,
     });
   }
   return { byId, fetchedAt: Date.now() };
@@ -164,6 +174,144 @@ export function baseUid(uid: string): string {
   s = s.replace(/-(low|medium|high|xhigh|max|minimal|none|thinking|reasoning)(?=-|$)/g, "");
   s = s.replace(/-(fast|priority|1m)$/g, "");
   return s;
+}
+
+// ----------------------------------------------------------------------------
+// Speed class — heuristic, since no public API reports real throughput.
+// "Fast" variants are explicit; small/flash/mini families are quick;
+// huge-context and heavyweight reasoning models are slow.
+// ----------------------------------------------------------------------------
+
+const FAST_SUFFIXES = ["-fast", "lightning", "flash", "mini", "haiku", "swe"];
+const SLOW_MARKERS = ["opus", "astra", "sol", "luna", "fable", "1m", "codex"];
+
+export function speedClass(uid: string): "fast" | "medium" | "slow" {
+  const s = baseUid(uid);
+  if (FAST_SUFFIXES.some(m => s.includes(m))) return "fast";
+  if (SLOW_MARKERS.some(m => s.includes(m))) return "slow";
+  return "medium";
+}
+
+// ----------------------------------------------------------------------------
+// Provider speed stats (tps) — collected once from OpenRouter model pages.
+//
+// The public endpoints API returns throughput_last_30m: null, but each model
+// page (openrouter.ai/<orId>) renders a per-provider table with real P50
+// latency and throughput. `cli.ts speeds` scrapes those pages and saves
+// speeds.json (committed to the repo as a snapshot); at runtime we only read
+// the file — no scraping while serving.
+// ----------------------------------------------------------------------------
+
+export interface SpeedInfo {
+  /** Median output tokens/sec across providers — the "crowd average". */
+  tpsMedian?: number;
+  /** Best (max) tps across providers — what the fastest endpoint serves. */
+  tpsBest?: number;
+  /** Best (min) round-trip latency in seconds. */
+  latencyBestS?: number;
+}
+
+type SpeedsFile = Record<string, SpeedInfo | string | undefined>;
+
+let speedsCache: Record<string, SpeedInfo> | null = null;
+
+export function loadSpeeds(): Record<string, SpeedInfo> {
+  if (speedsCache) return speedsCache;
+  speedsCache = {};
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(process.cwd(), "speeds.json"), "utf8")) as SpeedsFile;
+    for (const [k, v] of Object.entries(raw)) {
+      if (k.startsWith("_") || !v || typeof v !== "object") continue;
+      speedsCache[k] = v;
+    }
+  } catch { /* no speeds.json — fine */ }
+  return speedsCache;
+}
+
+export function clearSpeedsCache(): void {
+  speedsCache = null;
+}
+
+/** Speed stats for a Windsurf uid via the OR mapping. Null when unknown. */
+export function speedInfo(uid: string): SpeedInfo | null {
+  const orId = WINDSURF_TO_OR[baseUid(uid)];
+  if (!orId) return null;
+  return loadSpeeds()[orId] ?? null;
+}
+
+const TPS_RE = /(\d+(?:\.\d+)?)\s*tps\b/g;
+const LATENCY_RE = /(\d+(?:\.\d+)?)s(?![a-z])/g;
+
+function median(xs: number[]): number | undefined {
+  if (!xs.length) return undefined;
+  const s = [...xs].sort((a, b) => a - b);
+  const mid = s.length >> 1;
+  return s.length % 2 ? s[mid] : (s[mid - 1]! + s[mid]!) / 2;
+}
+
+/** Fetch one OR model page and extract per-provider tps/latency stats.
+ *  Scripts/styles/tags are stripped first so only visible table text remains. */
+export async function fetchSpeedInfo(orId: string): Promise<SpeedInfo> {
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(new Error("speed fetch timeout")), RANKS_FETCH_TIMEOUT_MS);
+  let html: string;
+  try {
+    const resp = await fetch(`https://openrouter.ai/${orId}`, {
+      signal: ac.signal,
+      headers: { "User-Agent": "windsurf-openai (github.com/ploginoff/windsurf-openai)" },
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    html = await resp.text();
+  } finally {
+    clearTimeout(timer);
+  }
+  const text = html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ");
+
+  const tps: number[] = [];
+  for (const m of text.matchAll(TPS_RE)) {
+    const v = Number(m[1]);
+    if (Number.isFinite(v) && v > 0 && v < 1000) tps.push(v);
+  }
+  const lat: number[] = [];
+  for (const m of text.matchAll(LATENCY_RE)) {
+    const v = Number(m[1]);
+    if (Number.isFinite(v) && v > 0 && v < 60) lat.push(v);
+  }
+  const med = median(tps);
+  return {
+    ...(med !== undefined ? { tpsMedian: Math.round(med) } : {}),
+    ...(tps.length ? { tpsBest: Math.max(...tps) } : {}),
+    ...(lat.length ? { latencyBestS: Math.round(Math.min(...lat) * 10) / 10 } : {}),
+  };
+}
+
+/** Collect speed stats for every mapped OR model and write speeds.json.
+ *  Existing entries survive individual page failures. Returns models fetched. */
+export async function collectSpeeds(
+  onProgress?: (done: number, total: number, orId: string) => void,
+): Promise<number> {
+  const orIds = [...new Set(Object.values(WINDSURF_TO_OR))].sort();
+  const prev = loadSpeeds();
+  const out: SpeedsFile = { _fetchedAt: new Date().toISOString() };
+  let ok = 0;
+  for (let i = 0; i < orIds.length; i++) {
+    const orId = orIds[i]!;
+    onProgress?.(i + 1, orIds.length, orId);
+    try {
+      out[orId] = await fetchSpeedInfo(orId);
+      ok++;
+    } catch {
+      if (prev[orId]) out[orId] = prev[orId]; // keep last known good
+    }
+    await new Promise(r => setTimeout(r, 250)); // be polite to openrouter
+  }
+  fs.writeFileSync(path.join(process.cwd(), "speeds.json"), JSON.stringify(out, null, 2) + "\n");
+  clearSpeedsCache();
+  return ok;
 }
 
 // ----------------------------------------------------------------------------

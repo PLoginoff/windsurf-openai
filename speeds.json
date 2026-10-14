@@ -1,0 +1,155 @@
+{
+  "_fetchedAt": "2026-10-14T14:30:17.930Z",
+  "anthropic/claude-fable-5.1": {
+    "tpsMedian": 50,
+    "tpsBest": 57
+  },
+  "anthropic/claude-haiku-5.5": {
+    "tpsMedian": 150,
+    "tpsBest": 178
+  },
+  "anthropic/claude-opus-4.5": {
+    "tpsMedian": 47,
+    "tpsBest": 54
+  },
+  "anthropic/claude-opus-4.6": {
+    "tpsMedian": 40,
+    "tpsBest": 50
+  },
+  "anthropic/claude-opus-4.7": {
+    "tpsMedian": 56,
+    "tpsBest": 75
+  },
+  "anthropic/claude-opus-4.8": {
+    "tpsMedian": 76,
+    "tpsBest": 162
+  },
+  "anthropic/claude-opus-5": {
+    "tpsMedian": 70,
+    "tpsBest": 141
+  },
+  "anthropic/claude-opus-5.5": {
+    "tpsMedian": 76,
+    "tpsBest": 144
+  },
+  "anthropic/claude-sonnet-4.6": {
+    "tpsMedian": 45,
+    "tpsBest": 74
+  },
+  "anthropic/claude-sonnet-5": {
+    "tpsMedian": 71,
+    "tpsBest": 94
+  },
+  "anthropic/claude-sonnet-5.5": {
+    "tpsMedian": 94,
+    "tpsBest": 102
+  },
+  "deepseek/deepseek-v4-flash-0731": {
+    "tpsMedian": 54,
+    "tpsBest": 125
+  },
+  "deepseek/deepseek-v4-pro-0813": {
+    "tpsMedian": 42,
+    "tpsBest": 69
+  },
+  "deepseek/deepseek-v4.1-flash": {
+    "tpsMedian": 87,
+    "tpsBest": 278
+  },
+  "google/gemini-2.5-pro": {
+    "tpsMedian": 75,
+    "tpsBest": 117
+  },
+  "google/gemini-3-flash-preview": {
+    "tpsMedian": 77,
+    "tpsBest": 105
+  },
+  "google/gemini-3.1-pro-preview": {
+    "tpsMedian": 76,
+    "tpsBest": 104
+  },
+  "google/gemini-3.5-flash": {
+    "tpsMedian": 128,
+    "tpsBest": 205
+  },
+  "google/gemini-3.8-flash": {
+    "tpsMedian": 77,
+    "tpsBest": 96
+  },
+  "moonshotai/kimi-k2.6": {
+    "tpsMedian": 35,
+    "tpsBest": 89
+  },
+  "moonshotai/kimi-k2.7-code": {
+    "tpsMedian": 39,
+    "tpsBest": 147
+  },
+  "moonshotai/kimi-k3": {
+    "tpsMedian": 49,
+    "tpsBest": 94
+  },
+  "nvidia/nemotron-3-ultra-550b-a55b": {
+    "tpsMedian": 59,
+    "tpsBest": 83
+  },
+  "openai/gpt-4.1": {
+    "tpsMedian": 80,
+    "tpsBest": 127
+  },
+  "openai/gpt-4o-2024-08-06": {
+    "tpsMedian": 60,
+    "tpsBest": 63
+  },
+  "openai/gpt-5.2": {
+    "tpsMedian": 50,
+    "tpsBest": 65
+  },
+  "openai/gpt-5.2-codex": {
+    "tpsMedian": 41,
+    "tpsBest": 41
+  },
+  "openai/gpt-5.3-codex": {
+    "tpsMedian": 51,
+    "tpsBest": 62
+  },
+  "openai/gpt-5.4": {
+    "tpsMedian": 55,
+    "tpsBest": 93
+  },
+  "openai/gpt-5.4-mini": {
+    "tpsMedian": 83,
+    "tpsBest": 113
+  },
+  "openai/gpt-5.5": {
+    "tpsMedian": 57,
+    "tpsBest": 89
+  },
+  "openai/o3": {
+    "tpsMedian": 40,
+    "tpsBest": 40
+  },
+  "x-ai/grok-4.5": {
+    "tpsMedian": 54,
+    "tpsBest": 54
+  },
+  "x-ai/grok-4.6": {
+    "tpsMedian": 55,
+    "tpsBest": 57
+  },
+  "x-ai/grok-4.7": {
+    "tpsMedian": 62,
+    "tpsBest": 81
+  },
+  "z-ai/glm-5.2": {
+    "tpsMedian": 66,
+    "tpsBest": 307
+  },
+  "z-ai/glm-5.3": {
+    "tpsMedian": 85,
+    "tpsBest": 174
+  },
+  "z-ai/glm-5.3-flash": {
+    "tpsMedian": 67,
+    "tpsBest": 188
+  }
+}

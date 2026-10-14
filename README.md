@@ -66,6 +66,7 @@ Other editors: point any OpenAI-compatible client at `http://127.0.0.1:42100/v1`
 | `status` | Show saved credentials |
 | `models` | List models with cost tiers (`--zed` → ready-to-paste JSON) |
 | `recommend` | What to use right now — freebies, value picks, power picks (`--all` → full table) |
+| `speeds` | Refresh the TPS snapshot from OpenRouter model pages (slow one-time crawl) |
 | `probe` | Dump Windsurf's raw per-model credits + prices |
 
 ## Cost tiers
@@ -87,6 +88,14 @@ The `★NN` badge after the name is the model's power score — Artificial Analy
 
 Override any tier via `tiers.json` next to the CLI (value `"blocked"` hides a model entirely).
 
+### Speed (TPS)
+
+`recommend --all` shows a `TPS` column — median output tokens/sec across OpenRouter's providers, scraped once from their model pages into the committed `speeds.json` snapshot (the public API returns no throughput data). Refresh occasionally:
+
+```bash
+npx tsx cli.ts speeds   # slow one-time crawl (~40 pages, ~15s)
+```
+
 ## Practical Advice (October 2026)
 
 Is a Windsurf subscription worth it just for this proxy? **Yes, absolutely.** If you use it strategically:
@@ -103,6 +112,8 @@ Is a Windsurf subscription worth it just for this proxy? **Yes, absolutely.** If
    - **Do NOT buy via Windsurf Extra-Usage:** Chinese open models like **GLM-5.3**, **GLM-5.2**, or **Kimi K3**. Windsurf charges up to a **20x markup on input tokens** ($1.40/1M vs $0.08/1M on OpenRouter). If your subscription credits run out, switch to OpenRouter directly for these models!
 
 Run `npx tsx cli.ts recommend` anytime to get the live picture for your account.
+
+A full snapshot — practical advice plus the complete sortable model table (power scores, credits, prices, release age, TPS) — lives in [RECOMMENDATIONS.md](RECOMMENDATIONS.md) (Russian version: [RECOMMENDATIONS_RU.md](RECOMMENDATIONS_RU.md)).
 
 ## Behind a proxy
 
