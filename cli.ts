@@ -42,8 +42,10 @@ function parseArgs(argv: string[]): { command: string; port: number; host: strin
     const a = argv[i];
     if (a === "--port" || a === "-p") { port = parseInt(argv[++i] ?? "", 10) || DEFAULT_PORT; }
     else if (a === "--host" || a === "--bind") { host = argv[++i] ?? DEFAULT_HOST; }
+    else if (a.startsWith("--host=") || a.startsWith("--bind=")) { host = a.slice(a.indexOf("=") + 1); }
     else if (a === "--key" || a === "-k") { key = argv[++i]; }
     else if (a.startsWith("--key=")) { key = a.slice("--key=".length); }
+    else if (a.startsWith("--port=")) { port = parseInt(a.slice("--port=".length), 10) || DEFAULT_PORT; }
     else if (a === "--zed") { zed = true; }
     else if (a === "--all") { all = true; }
     else if (!a.startsWith("--")) { command = a; }
