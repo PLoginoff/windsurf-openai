@@ -19,6 +19,16 @@ import { powerScore } from "./ranks";
 const WINDSURF_PROXY_HOST = "127.0.0.1";
 const WINDSURF_PROXY_PORT = 42100;
 
+let configuredProxyKey: string | null = null;
+
+export function setProxyKey(key: string | null): void {
+  configuredProxyKey = key && key.trim().length > 0 ? key.trim() : null;
+}
+
+export function getProxyKey(): string | null {
+  return configuredProxyKey ?? (process.env.WINDSURF_PROXY_KEY?.trim() || null);
+}
+
 // ----------------------------------------------------------------------------
 // Proxy handler (Node http server)
 // ----------------------------------------------------------------------------
@@ -207,19 +217,31 @@ function isLoopbackAddress(addr: string | undefined): boolean {
 }
 
 async function authorizeRequest(req: IncomingMessage): Promise<{ status: number; body: string; contentType: string } | null> {
+  const authHeader = (req.headers.authorization ?? "") as string;
+  const ip = req.socket.remoteAddress;
+
   // Local clients (Zed, curl on this machine) are trusted without a Bearer key —
   // the proxy is localhost-oriented and the key only guards remote access when
   // bound to a non-loopback host (--host 0.0.0.0).
-  if (isLoopbackAddress(req.socket.remoteAddress)) return null;
+  if (isLoopbackAddress(ip)) return null;
 
-  const authHeader = (req.headers.authorization ?? "") as string;
   if (!authHeader.startsWith("Bearer ")) {
     return { status: 401, body: JSON.stringify({ error: { message: "Unauthorized: missing or malformed Authorization header.", type: "windsurf_error" } }), contentType: "application/json" };
   }
   const presented = authHeader.slice("Bearer ".length);
   const presentedBuf = Buffer.from(presented, "utf8");
 
-  // Accept the persisted apiKey from disk (from `cli.ts login`)
+  // Check custom proxy key if configured (--key or WINDSURF_PROXY_KEY)
+  const proxyKey = getProxyKey();
+  if (proxyKey) {
+    const proxyKeyBuf = Buffer.from(proxyKey, "utf8");
+    if (presentedBuf.length === proxyKeyBuf.length && crypto.timingSafeEqual(presentedBuf, proxyKeyBuf)) {
+      return null;
+    }
+    return { status: 401, body: JSON.stringify({ error: { message: "Unauthorized: Invalid proxy key.", type: "windsurf_error" } }), contentType: "application/json" };
+  }
+
+  // Otherwise, accept the persisted apiKey from disk (from `cli.ts login`)
   try {
     const creds = loadCredentials();
     if (creds?.apiKey) {

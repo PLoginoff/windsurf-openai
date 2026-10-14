@@ -117,10 +117,19 @@ const APP_DIR_NAME = "opencode-windsurf-auth";
 const CREDS_FILENAME = "credentials.json";
 
 export function getCredentialsDir(): string {
+  // If local credentials.json exists in cwd, keep credentials dir as cwd
+  const localFile = path.resolve(process.cwd(), CREDS_FILENAME);
+  if (fs.existsSync(localFile)) {
+    return process.cwd();
+  }
   return path.join(os.homedir(), ".config", APP_DIR_NAME);
 }
 
 export function getCredentialsPath(): string {
+  const localFile = path.resolve(process.cwd(), CREDS_FILENAME);
+  if (fs.existsSync(localFile)) {
+    return localFile;
+  }
   return path.join(getCredentialsDir(), CREDS_FILENAME);
 }
 

@@ -15,7 +15,7 @@
  * Point Zed's llama.cpp provider at http://127.0.0.1:42100 (no /v1),
  * or any OpenAI-compatible client at http://127.0.0.1:42100/v1.
  */
-import { startProxy, stopProxy, buildModelList } from "./proxy";
+import { startProxy, stopProxy, buildModelList, setProxyKey, getProxyKey } from "./proxy";
 import {
   loadCredentials, saveCredentials, deleteCredentials,
   DEFAULT_REGION, runLoginLoopback, registerUser,
@@ -31,24 +31,32 @@ import { clearCachedCatalog } from "./catalog";
 const DEFAULT_PORT = 42100;
 const DEFAULT_HOST = "127.0.0.1";
 
-function parseArgs(argv: string[]): { command: string; port: number; host: string; zed: boolean; all: boolean } {
+function parseArgs(argv: string[]): { command: string; port: number; host: string; key?: string; zed: boolean; all: boolean } {
   let command = "serve";
   let port = DEFAULT_PORT;
   let host = DEFAULT_HOST;
+  let key: string | undefined;
   let zed = false;
   let all = false;
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--port" || a === "-p") { port = parseInt(argv[++i] ?? "", 10) || DEFAULT_PORT; }
     else if (a === "--host" || a === "--bind") { host = argv[++i] ?? DEFAULT_HOST; }
+    else if (a === "--key" || a === "-k") { key = argv[++i]; }
+    else if (a.startsWith("--key=")) { key = a.slice("--key=".length); }
     else if (a === "--zed") { zed = true; }
     else if (a === "--all") { all = true; }
     else if (!a.startsWith("--")) { command = a; }
   }
-  return { command, port, host, zed, all };
+  return { command, port, host, key, zed, all };
 }
 
-async function cmdServe(port: number, host: string): Promise<void> {
+async function cmdServe(port: number, host: string, key?: string): Promise<void> {
+  if (key) {
+    setProxyKey(key);
+  }
+  const effectiveKey = getProxyKey();
+
   const stored = loadCredentials();
   if (stored) {
     console.error(`[windsurf] authenticated as ${stored.name} (${stored.apiServerUrl})`);
@@ -70,8 +78,10 @@ async function cmdServe(port: number, host: string): Promise<void> {
   console.error(`[windsurf] proxy listening on http://${host}:${actualPort}/v1`);
   console.error(`[windsurf] models endpoint:  http://${host}:${actualPort}/v1/models`);
   console.error(`[windsurf] chat endpoint:   http://${host}:${actualPort}/v1/chat/completions`);
-  if (stored) {
-    console.error(`[windsurf] api_key (Bearer, remote clients): ${stored.apiKey}`);
+  if (effectiveKey) {
+    console.error(`[windsurf] proxy auth:     --key enabled (Bearer ${effectiveKey})`);
+  } else if (stored) {
+    console.error(`[windsurf] proxy auth:     defaulting to Windsurf apiKey (Bearer ${stored.apiKey})`);
   } else {
     console.error("[windsurf] chat will return 503 until you log in (windsurf-openai login)");
   }
@@ -326,9 +336,9 @@ async function cmdProbe(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const { command, port, host, zed, all } = parseArgs(process.argv.slice(2));
+  const { command, port, host, key, zed, all } = parseArgs(process.argv.slice(2));
   switch (command) {
-    case "serve": await cmdServe(port, host); break;
+    case "serve": await cmdServe(port, host, key); break;
     case "login": await cmdLogin(); break;
     case "status": cmdStatus(); break;
     case "logout": cmdLogout(); break;
@@ -372,7 +382,8 @@ Commands:
 
 Options:
   --port, -p <n>   Proxy port (default 42100)
-  --host <addr>    Bind address (default 127.0.0.1; use 0.0.0.0 to expose on LAN)
+  --host <addr>    Bind address (default 127.0.0.1; use 0.0.0.0 to expose on LAN/WAN)
+  --key, -k <key>  Custom API key for remote clients (or WINDSURF_PROXY_KEY env)
 `);
 }
 

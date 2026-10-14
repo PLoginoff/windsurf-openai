@@ -2,7 +2,7 @@
 
 Standalone proxy that exposes **Windsurf/Cognition/Devin models as a plain OpenAI API** — plug them into Zed, or any OpenAI-compatible client, using your existing Windsurf subscription.
 
-The main point of this proxy isn't just bridging the protocol — it's **giving you instant clarity on what to use right now**. Windsurf has 200+ models with hidden credit costs, shifting promo windows, and wildly varying capability. This proxy decorates every model name with its **power rank and cost tier** (`Kimi K3 High ★76 $`, `SWE-2 High ★74 free`), pins top picks on top, and comes with a `recommend` command that highlights the real freebies, best-value models, and overpriced traps at a glance.
+The main point of this proxy isn't just bridging the protocol — it's **giving you instant clarity on what to use right now**. Windsurf has 200+ models with hidden credit costs, shifting promo windows, and wildly varying capability. This proxy decorates every model name with its **power rank and cost tier** (`Kimi K3 High ★76 $`, `SWE-2 High ★50 free`), pins top picks on top, and comes with a `recommend` command that highlights the real freebies, best-value models, and overpriced traps at a glance.
 
 Based on [pi-windsurf](https://github.com/ktappdev/pi-windsurf) (originally a Pi extension), reworked into a pure proxy.
 
@@ -86,6 +86,23 @@ The `★NN` badge after the name is the model's power score — Artificial Analy
 ```
 
 Override any tier via `tiers.json` next to the CLI (value `"blocked"` hides a model entirely).
+
+## Practical Advice (October 2026)
+
+Is a Windsurf subscription worth it just for this proxy? **Yes, absolutely.** If you use it strategically:
+
+1. **Free Workhorse (`SWE-2 High ★50 free`):**
+   - Costs **0 credits** while the promo window lasts.
+   - Best for routine edits, refactoring, exploring directories, running tools, and small bugs. Don't burn your paid plan credits on simple tasks.
+2. **Best on Subscription Credits (`GLM-5.3 Max ★75 $` & `Kimi K3 High ★76 $`):**
+   - **GLM-5.3 Max** costs just **1 credit per prompt** while delivering top-tier benchmark intelligence (★75). It is by far the highest value-per-credit model on the platform.
+   - **Kimi K3** is a fantastic alternative for 4–6 credits when you need a different perspective.
+   - Save **Claude Opus 5.5 (45cr)** or **Claude Fable 5.1 (50–175cr)** for the hardest architectural challenges.
+3. **Extra Usage Beyond Plan Credits (Paying in Real $):**
+   - **Safe to buy in Windsurf:** Western frontier models (**Claude Opus/Sonnet 5.5**, **GPT-5.4**, **Gemini 3.8 Flash**) have zero markup in Windsurf Extra-Usage — prices match OpenRouter and official APIs 1:1 (e.g. Claude Opus 5.5 is $4/$20 per 1M tokens either way).
+   - **Do NOT buy via Windsurf Extra-Usage:** Chinese open models like **GLM-5.3**, **GLM-5.2**, or **Kimi K3**. Windsurf charges up to a **20x markup on input tokens** ($1.40/1M vs $0.08/1M on OpenRouter). If your subscription credits run out, switch to OpenRouter directly for these models!
+
+Run `npx tsx cli.ts recommend` anytime to get the live picture for your account.
 
 ## Behind a proxy
 

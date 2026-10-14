@@ -170,12 +170,14 @@ export function baseUid(uid: string): string {
 // Manual fallback ranks (SWE models are Cognition-internal, not on OpenRouter)
 // ----------------------------------------------------------------------------
 
-/** Rough power scores for models with no OR counterpart. Edit to taste. */
+/** Rough power scores for models with no OR counterpart.
+ * SWE models are Cognition's internal agentic workhorses: solid at tool use
+ * and fast, but not heavyweight reasoning models compared to frontier LLMs. */
 const MANUAL_SCORES: Record<string, number> = {
-  "swe-2": 74,          // Cognition's agentic SWE line ≈ top-tier coding models
-  "swe-1-7": 70,
-  "swe-1-7-lightning": 68,
-  "swe-1-6": 62,
+  "swe-2": 50,
+  "swe-1-7": 42,
+  "swe-1-7-lightning": 39,
+  "swe-1-6": 33,
 };
 
 export function manualScore(uid: string): number | undefined {
