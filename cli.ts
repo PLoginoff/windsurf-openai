@@ -248,8 +248,8 @@ async function cmdRecommend(all: boolean, md = false): Promise<void> {
     return `${score}  ${credits}cr  ${ws.padEnd(16)}  ${orr.padEnd(16)}  ${age}  ${tps}  ${r.label}`;
   };
 
-  // Markdown output for RECOMMENDATIONS.md (--md): GitHub renders tables
-  // with sortable columns automatically (click the header arrows).
+  // Markdown output for RECOMMENDATIONS.md (--md). GitHub tables are static
+  // (no sorting, no row colors) — emoji tier markers are the only visual cue.
   const mdTable = (title: string, header: string[], rowsMd: string[][]): void => {
     console.log(`## ${title}\n`);
     console.log(`| ${header.join(" | ")} |`);
@@ -270,18 +270,21 @@ async function cmdRecommend(all: boolean, md = false): Promise<void> {
 
     if (md) {
       console.log(`> Snapshot for plan **${status.planName ?? "?"}**, ${rows.length} models, generated ${new Date().toISOString().slice(0, 10)}.\n`);
-      console.log(`> Regenerate: \`npx tsx cli.ts recommend --all --md\`. GitHub tables are sortable — click the arrows in a column header.\n`);
+      console.log(`> Regenerate: \`npx tsx cli.ts recommend --all --md\`.\n`);
       mdTable("All models", ["Tier", "Score", "Credits", "WS $/1M in/out", "OR $/1M in/out", "Age", "TPS", "Model"],
-        rows.map(r => [
-          r.free ? "FREE" : r.promo ? "PROMO" : "",
-          r.score !== undefined ? String(Math.round(r.score)) : "?",
-          r.free ? "0" : r.credits !== undefined ? fmt(r.credits, 1) : "?",
-          r.wsIn !== undefined ? `${fmt(r.wsIn)}/${fmt(r.wsOut)}` : "-",
-          r.orIn !== undefined ? `${fmt(r.orIn)}/${fmt(r.orOut)}` : "-",
-          ageStr(r.created),
-          r.tps !== undefined ? String(Math.round(r.tps)) : "-",
-          r.label,
-        ]));
+        rows.map(r => {
+          const tier = r.free ? "🟢 FREE" : r.promo ? "🟡 PROMO" : (r.credits ?? 0) >= 100 ? "🔴" : "";
+          return [
+            tier,
+            r.score !== undefined ? String(Math.round(r.score)) : "?",
+            r.free ? "0" : r.credits !== undefined ? fmt(r.credits, 1) : "?",
+            r.wsIn !== undefined ? `${fmt(r.wsIn)}/${fmt(r.wsOut)}` : "-",
+            r.orIn !== undefined ? `${fmt(r.orIn)}/${fmt(r.orOut)}` : "-",
+            ageStr(r.created),
+            r.tps !== undefined ? String(Math.round(r.tps)) : "-",
+            r.label,
+          ];
+        }));
       console.log("**Score** — Artificial Analysis coding/intelligence index via OpenRouter (0-100).  ");
       console.log("**FREE** — 0-credit promo as marketed by Windsurf (SWE). **PROMO** — discounted window, still per-prompt credits.  ");
       console.log("**WS $/1M** — Windsurf extra-usage prices; **OR $/1M** — OpenRouter reference. SWE scores are estimates.  ");
@@ -342,7 +345,7 @@ async function cmdRecommend(all: boolean, md = false): Promise<void> {
     };
     console.log(`# Windsurf model recommendations\n`);
     console.log(`> Snapshot for plan **${status.planName ?? "?"}**, ${rows.length} models, generated ${new Date().toISOString().slice(0, 10)}.\n`);
-    console.log(`> Regenerate: \`npx tsx cli.ts recommend --all --md > RECOMMENDATIONS.md\`. GitHub tables are sortable — click the arrows in a column header.\n`);
+    console.log(`> Regenerate: \`npx tsx cli.ts recommend --all --md > RECOMMENDATIONS.md\`.\n`);
     bucketTable("FREE (0 credits)", free, "Genuinely free — grab it while the promo window is open.");
     bucketTable("PROMO (dirt cheap)", promo, `Heavy discount, but non-zero credits — active until ${promoTill}.`);
     bucketTable("VALUE (≤10 credits)", value, "Best bang for the buck.");

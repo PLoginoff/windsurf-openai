@@ -1,6 +1,6 @@
 # Windsurf model recommendations
 
-> Practical advice for a Windsurf Pro subscription (October 2026), followed by the full sortable model table.
+> Practical advice for a Windsurf Pro subscription (October 2026), followed by the full model table.
 > Regenerate the table with `npx tsx cli.ts recommend --all --md`; refresh TPS with `npx tsx cli.ts speeds`.
 
 ## What to actually use
@@ -25,42 +25,42 @@ Run `npx tsx cli.ts recommend` anytime to get the live picture for your account.
 ## All models
 
 > Snapshot for plan **Pro**, 201 models, generated 2026-10-14.
-> Regenerate: `npx tsx cli.ts recommend --all --md`. GitHub tables are sortable — click the arrows in a column header.
+> Regenerate: `npx tsx cli.ts recommend --all --md`.
 
 | Tier | Score | Credits | WS $/1M in/out | OR $/1M in/out | Age | TPS | Model |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| FREE | 50 | 0 | - | - | fresh | 100 | SWE-2 Medium |
-| FREE | 50 | 0 | - | - | fresh | 100 | SWE-2 High |
-| FREE | 50 | 0 | - | - | fresh | 100 | SWE-2 Max |
-| PROMO | 76 | 6 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.7 Flash Low |
-| PROMO | 76 | 6 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.8 Flash Low |
-| PROMO | 76 | 8 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.8 Flash Medium |
-| PROMO | 76 | 8 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.7 Flash Medium |
-| PROMO | 76 | 10 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.7 Flash High |
-| PROMO | 76 | 10 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.8 Flash High |
-| PROMO | ? | 50 | 1/5 | - | - | - | Gemini 4 Argon Low |
-| PROMO | ? | 70 | 1/5 | - | - | - | Gemini 4 Argon Medium |
-| PROMO | ? | 90 | 1/5 | - | - | - | Gemini 4 Argon High |
+| 🟢 FREE | 50 | 0 | - | - | fresh | 100 | SWE-2 Medium |
+| 🟢 FREE | 50 | 0 | - | - | fresh | 100 | SWE-2 High |
+| 🟢 FREE | 50 | 0 | - | - | fresh | 100 | SWE-2 Max |
+| 🟡 PROMO | 76 | 6 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.7 Flash Low |
+| 🟡 PROMO | 76 | 6 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.8 Flash Low |
+| 🟡 PROMO | 76 | 8 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.8 Flash Medium |
+| 🟡 PROMO | 76 | 8 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.7 Flash Medium |
+| 🟡 PROMO | 76 | 10 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.7 Flash High |
+| 🟡 PROMO | 76 | 10 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.8 Flash High |
+| 🟡 PROMO | ? | 50 | 1/5 | - | - | - | Gemini 4 Argon Low |
+| 🟡 PROMO | ? | 70 | 1/5 | - | - | - | Gemini 4 Argon Medium |
+| 🟡 PROMO | ? | 90 | 1/5 | - | - | - | Gemini 4 Argon High |
 |  | 82 | 40 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 Low |
 |  | 82 | 50 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 Medium |
 |  | 82 | 70 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 High |
 |  | 82 | 80 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 XHigh |
-|  | 82 | 100 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 Max |
-|  | 82 | 150 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5.1 Low |
-|  | 82 | 175 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5.1 Medium |
-|  | 82 | 200 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5.1 High |
-|  | 82 | 225 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5.1 XHigh |
-|  | 82 | 250 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5.1 Max |
+| 🔴 | 82 | 100 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 Max |
+| 🔴 | 82 | 150 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5.1 Low |
+| 🔴 | 82 | 175 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5.1 Medium |
+| 🔴 | 82 | 200 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5.1 High |
+| 🔴 | 82 | 225 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5.1 XHigh |
+| 🔴 | 82 | 250 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5.1 Max |
 |  | 78 | 75 | 5/25 | 5/25 | fresh | 70 | Claude Opus 5 Low |
 |  | 78 | 80 | 5/25 | 5/25 | fresh | 70 | Claude Opus 5 Medium |
-|  | 78 | 115 | 5/25 | 5/25 | fresh | 70 | Claude Opus 5 High |
-|  | 78 | 150 | 10/50 | 5/25 | fresh | 70 | Claude Opus 5 Low Fast |
-|  | 78 | 155 | 5/25 | 5/25 | fresh | 70 | Claude Opus 5 XHigh |
-|  | 78 | 160 | 5/25 | 5/25 | fresh | 70 | Claude Opus 5 Max |
-|  | 78 | 160 | 10/50 | 5/25 | fresh | 70 | Claude Opus 5 Medium Fast |
-|  | 78 | 230 | 10/50 | 5/25 | fresh | 70 | Claude Opus 5 High Fast |
-|  | 78 | 310 | 10/50 | 5/25 | fresh | 70 | Claude Opus 5 XHigh Fast |
-|  | 78 | 320 | 10/50 | 5/25 | fresh | 70 | Claude Opus 5 Max Fast |
+| 🔴 | 78 | 115 | 5/25 | 5/25 | fresh | 70 | Claude Opus 5 High |
+| 🔴 | 78 | 150 | 10/50 | 5/25 | fresh | 70 | Claude Opus 5 Low Fast |
+| 🔴 | 78 | 155 | 5/25 | 5/25 | fresh | 70 | Claude Opus 5 XHigh |
+| 🔴 | 78 | 160 | 5/25 | 5/25 | fresh | 70 | Claude Opus 5 Max |
+| 🔴 | 78 | 160 | 10/50 | 5/25 | fresh | 70 | Claude Opus 5 Medium Fast |
+| 🔴 | 78 | 230 | 10/50 | 5/25 | fresh | 70 | Claude Opus 5 High Fast |
+| 🔴 | 78 | 310 | 10/50 | 5/25 | fresh | 70 | Claude Opus 5 XHigh Fast |
+| 🔴 | 78 | 320 | 10/50 | 5/25 | fresh | 70 | Claude Opus 5 Max Fast |
 |  | 77 | 10 | 2/6 | 2/6 | fresh | 55 | Grok 4.6 Low |
 |  | 77 | 20 | 2/6 | 2/6 | fresh | 55 | Grok 4.6 Medium |
 |  | 77 | 25 | 2/6 | 2/6 | fresh | 55 | Grok 4.6 High |
@@ -90,7 +90,7 @@ Run `npx tsx cli.ts recommend` anytime to get the live picture for your account.
 |  | 74 | 50 | 10/50 | 5/25 | fresh | 76 | Claude Opus 4.8 Medium Fast |
 |  | 74 | 70 | 10/50 | 5/25 | fresh | 76 | Claude Opus 4.8 High Fast |
 |  | 74 | 80 | 10/50 | 5/25 | fresh | 76 | Claude Opus 4.8 XHigh Fast |
-|  | 74 | 100 | 10/50 | 5/25 | fresh | 76 | Claude Opus 4.8 Max Fast |
+| 🔴 | 74 | 100 | 10/50 | 5/25 | fresh | 76 | Claude Opus 4.8 Max Fast |
 |  | 74 | 20 | 5/25 | 5/25 | fresh | 56 | Claude Opus 4.7 Low |
 |  | 74 | 40 | 5/25 | 5/25 | fresh | 56 | Claude Opus 4.7 Medium |
 |  | 74 | 60 | 5/25 | 5/25 | fresh | 56 | Claude Opus 4.7 High |
@@ -140,13 +140,13 @@ Run `npx tsx cli.ts recommend` anytime to get the live picture for your account.
 |  | 58 | 35 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 Low |
 |  | 58 | 45 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 Medium |
 |  | 58 | 65 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 High |
-|  | 58 | 125 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 XHigh |
-|  | 58 | 150 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 Max |
-|  | 58 | 150 | 8/40 | 4/20 | new | 76 | Claude Opus 5.5 Low Fast |
-|  | 58 | 160 | 8/40 | 4/20 | new | 76 | Claude Opus 5.5 Medium Fast |
-|  | 58 | 230 | 8/40 | 4/20 | new | 76 | Claude Opus 5.5 High Fast |
-|  | 58 | 310 | 8/40 | 4/20 | new | 76 | Claude Opus 5.5 XHigh Fast |
-|  | 58 | 320 | 8/40 | 4/20 | new | 76 | Claude Opus 5.5 Max Fast |
+| 🔴 | 58 | 125 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 XHigh |
+| 🔴 | 58 | 150 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 Max |
+| 🔴 | 58 | 150 | 8/40 | 4/20 | new | 76 | Claude Opus 5.5 Low Fast |
+| 🔴 | 58 | 160 | 8/40 | 4/20 | new | 76 | Claude Opus 5.5 Medium Fast |
+| 🔴 | 58 | 230 | 8/40 | 4/20 | new | 76 | Claude Opus 5.5 High Fast |
+| 🔴 | 58 | 310 | 8/40 | 4/20 | new | 76 | Claude Opus 5.5 XHigh Fast |
+| 🔴 | 58 | 320 | 8/40 | 4/20 | new | 76 | Claude Opus 5.5 Max Fast |
 |  | 56 | 1.5 | 0.75/4.5 | 0.75/4.5 | aging | 83 | GPT-5.4 Mini Low Thinking |
 |  | 56 | 1.5 | 0.75/4.5 | 0.75/4.5 | aging | 83 | GPT-5.4 Mini Medium Thinking |
 |  | 56 | 4.5 | 0.75/4.5 | 0.75/4.5 | aging | 83 | GPT-5.4 Mini High Thinking |
@@ -229,7 +229,6 @@ Run `npx tsx cli.ts recommend` anytime to get the live picture for your account.
 |  | ? | 2 | 1.25/10 | - | - | - | GPT-5 High Thinking |
 |  | ? | 2 | 1.25/10 | - | - | - | GPT-5.1 High Thinking |
 |  | ? | 2 | 2.5/20 | - | - | - | GPT-5.1 Medium Thinking Fast |
-|  | ? | 4 | 2.5/20 | - | - | - | GPT-5.1 High Thinking Fast |
 
 **Score** — Artificial Analysis coding/intelligence index via OpenRouter (0-100).  
 **FREE** — 0-credit promo as marketed by Windsurf (SWE). **PROMO** — discounted window, still per-prompt credits.  
