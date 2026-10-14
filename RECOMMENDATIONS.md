@@ -17,6 +17,7 @@
 3. **Extra Usage Beyond Plan Credits (Paying in Real $):**
    - **Safe to buy in Windsurf:** Western frontier models (**Claude Opus/Sonnet 5.5**, **GPT-5.4**, **Gemini 3.8 Flash**) have zero markup in Windsurf Extra-Usage — prices match OpenRouter and official APIs 1:1 (e.g. Claude Opus 5.5 is $4/$20 per 1M tokens either way).
    - **Do NOT buy via Windsurf Extra-Usage:** Chinese open models like **GLM-5.3**, **GLM-5.2**, or **Kimi K3**. Windsurf charges up to a **20x markup on input tokens** ($1.40/1M vs $0.08/1M on OpenRouter). If your subscription credits run out, switch to OpenRouter directly for these models!
+   - **Exception:** **GLM-5.3 Flash** — its Windsurf price ($0.15/$0.5) is actually fine after the subscription, roughly matching OpenRouter ($0.04/$0.9). A cheap, fast fallback when you're out of credits.
 
 Run `npx tsx cli.ts recommend` anytime to get the live picture for your account.
 
