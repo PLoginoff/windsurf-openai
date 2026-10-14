@@ -38,9 +38,9 @@
 | 🟢 PROMO | 76 | 8 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.7 Flash Medium |
 | 🟢 PROMO | 76 | 10 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.7 Flash High |
 | 🟢 PROMO | 76 | 10 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.8 Flash High |
-| 🟢 PROMO | ? | 50 | 1/5 | - | - | - | Gemini 4 Argon Low |
-| 🟢 PROMO | ? | 70 | 1/5 | - | - | - | Gemini 4 Argon Medium |
-| 🟢 PROMO | ? | 90 | 1/5 | - | - | - | Gemini 4 Argon High |
+| 🟡 | ? | 50 | 1/5 | - | - | - | Gemini 4 Argon Low |
+| 🟡 | ? | 70 | 1/5 | - | - | - | Gemini 4 Argon Medium |
+| 🟡 | ? | 90 | 1/5 | - | - | - | Gemini 4 Argon High |
 | 🟡 | 82 | 40 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 Low |
 | 🟡 | 82 | 50 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 Medium |
 | 🟡 | 82 | 70 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 High |
@@ -137,9 +137,9 @@
 |  | 63 | 16 | 3/15 | 3/15 | aging | 45 | Claude Sonnet 4.6 Thinking 1M |
 |  | 62 | 1 | 0.95/4 | 0.65/3.41 | fresh | 35 | Kimi K2.6 |
 |  | 61 | 1 | 0.95/4 | 0.67/3.35 | fresh | 39 | Kimi K2.7 |
-|  | 58 | 35 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 Low |
-| 🟢 | 58 | 45 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 Medium |
-|  | 58 | 65 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 High |
+| 🟡 | 58 | 35 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 Low |
+| 🟡 | 58 | 45 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 Medium |
+| 🟡 | 58 | 65 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 High |
 | 🔴 | 58 | 125 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 XHigh |
 | 🔴 | 58 | 150 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 Max |
 | 🔴 | 58 | 150 | 8/40 | 4/20 | new | 76 | Claude Opus 5.5 Low Fast |
@@ -147,15 +147,15 @@
 | 🔴 | 58 | 230 | 8/40 | 4/20 | new | 76 | Claude Opus 5.5 High Fast |
 | 🔴 | 58 | 310 | 8/40 | 4/20 | new | 76 | Claude Opus 5.5 XHigh Fast |
 | 🔴 | 58 | 320 | 8/40 | 4/20 | new | 76 | Claude Opus 5.5 Max Fast |
-|  | 56 | 1.5 | 0.75/4.5 | 0.75/4.5 | aging | 83 | GPT-5.4 Mini Low Thinking |
-|  | 56 | 1.5 | 0.75/4.5 | 0.75/4.5 | aging | 83 | GPT-5.4 Mini Medium Thinking |
-|  | 56 | 4.5 | 0.75/4.5 | 0.75/4.5 | aging | 83 | GPT-5.4 Mini High Thinking |
-|  | 56 | 12 | 0.75/4.5 | 0.75/4.5 | aging | 83 | GPT-5.4 Mini XHigh Thinking |
-|  | 56 | 12 | 2/10 | 2/10 | new | 94 | Claude Sonnet 5.5 Low |
-|  | 56 | 15 | 2/10 | 2/10 | new | 94 | Claude Sonnet 5.5 Medium |
-|  | 56 | 20 | 2/10 | 2/10 | new | 94 | Claude Sonnet 5.5 High |
-|  | 56 | 30 | 2/10 | 2/10 | new | 94 | Claude Sonnet 5.5 XHigh |
-|  | 56 | 40 | 2/10 | 2/10 | new | 94 | Claude Sonnet 5.5 Max |
+| 🟡 | 56 | 1.5 | 0.75/4.5 | 0.75/4.5 | aging | 83 | GPT-5.4 Mini Low Thinking |
+| 🟡 | 56 | 1.5 | 0.75/4.5 | 0.75/4.5 | aging | 83 | GPT-5.4 Mini Medium Thinking |
+| 🟡 | 56 | 4.5 | 0.75/4.5 | 0.75/4.5 | aging | 83 | GPT-5.4 Mini High Thinking |
+| 🟡 | 56 | 12 | 0.75/4.5 | 0.75/4.5 | aging | 83 | GPT-5.4 Mini XHigh Thinking |
+| 🟡 | 56 | 12 | 2/10 | 2/10 | new | 94 | Claude Sonnet 5.5 Low |
+| 🟡 | 56 | 15 | 2/10 | 2/10 | new | 94 | Claude Sonnet 5.5 Medium |
+| 🟡 | 56 | 20 | 2/10 | 2/10 | new | 94 | Claude Sonnet 5.5 High |
+| 🟡 | 56 | 30 | 2/10 | 2/10 | new | 94 | Claude Sonnet 5.5 XHigh |
+| 🟡 | 56 | 40 | 2/10 | 2/10 | new | 94 | Claude Sonnet 5.5 Max |
 |  | 49 | 1 | 0.6/2.4 | 0.6/2.4 | fresh | 59 | Nemotron 3 Ultra None |
 |  | 49 | 1 | 0.6/2.4 | 0.6/2.4 | fresh | 59 | Nemotron 3 Ultra Medium |
 |  | 49 | 1 | 0.6/2.4 | 0.6/2.4 | fresh | 59 | Nemotron 3 Ultra High |
@@ -231,7 +231,7 @@
 |  | ? | 2 | 2.5/20 | - | - | - | GPT-5.1 Medium Thinking Fast |
 
 **Score** — индекс coding/intelligence от Artificial Analysis через OpenRouter (0-100).
-**Маркеры** — 🟢 бесплатно/промо/фичеред (бери смело), 🟡 мощные по разумной цене (score ≥70, иногда можно), 🔴 ≥100 кредитов/промпт (денежная яма).
+**Маркеры** — 🟢 бесплатно/промо или «бери смело»-семейства (GLM-5.3, Kimi K3), 🟡 мощные по разумной цене (score ≥70 или вручную выбранные семейства — иногда можно), 🔴 ≥100 кредитов/промпт (денежная яма).
 **FREE** — бесплатное промо, как его подаёт Windsurf (линейка SWE). **PROMO** — скидочное окно, но кредиты за промпт всё же списываются.
 **WS $/1M** — цены Windsurf Extra-Usage; **OR $/1M** — ориентир OpenRouter. Оценки SWE — ручные.
 **Age** — дата релиза из OpenRouter: new <1мес, fresh <6мес, aging <18мес, old ≥18мес.

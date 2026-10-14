@@ -25,7 +25,7 @@ import { clearCachedUserJwt } from "./auth";
 import { clearSessionIds, streamChatEvents } from "./chat";
 import { getUserStatus, isPromoActive, isActuallyFreePromo, clearCachedUserStatus } from "./status";
 import { isBlockedModel } from "./costs";
-import { FEATURED_UIDS, GREEN_FAMILIES } from "./featured";
+import { FEATURED_UIDS, GREEN_FAMILIES, YELLOW_FAMILIES } from "./featured";
 import { baseUid } from "./ranks";
 import { powerScore, getOrCatalog, lookupOrInfo, speedClass, speedInfo, collectSpeeds, manualCreated } from "./ranks";
 import { clearCachedCatalog } from "./catalog";
@@ -275,11 +275,12 @@ async function cmdRecommend(all: boolean, md = false): Promise<void> {
       console.log(`> Regenerate: \`npx tsx cli.ts recommend --all --md\`.\n`);
       mdTable("All models", ["Tier", "Score", "Credits", "WS $/1M in/out", "OR $/1M in/out", "Age", "TPS", "Model"],
         rows.map(r => {
+          const base = baseUid(r.uid);
           const tier = r.free ? "🟢 FREE"
-            : r.promo ? "🟢 PROMO"
-            : FEATURED_UIDS.includes(r.uid) || GREEN_FAMILIES.some(f => baseUid(r.uid).startsWith(f)) ? "🟢"
+            : r.promo && !YELLOW_FAMILIES.some(f => base.startsWith(f)) ? "🟢 PROMO"
+            : GREEN_FAMILIES.some(f => base.startsWith(f)) ? "🟢"
             : (r.credits ?? 0) >= 100 ? "🔴"
-            : (r.score ?? 0) >= 70 ? "🟡"
+            : YELLOW_FAMILIES.some(f => base.startsWith(f)) || (r.score ?? 0) >= 70 ? "🟡"
             : "";
           return [
             tier,
