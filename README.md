@@ -12,7 +12,7 @@ Based on [pi-windsurf](https://github.com/ktappdev/pi-windsurf) (originally a Pi
 
 A Windsurf subscription gives you access to Claude, GPT, Gemini, Kimi, SWE, GLM and more — but only inside Windsurf's own IDE. Two problems with that: first, you might just prefer a different editor. Second — as of October 2026 they straight-up broke their own IDE for regular users with a botched team migration (a "team" error on launch, fix timeline unknown).
 
-**Practical advice (October 2026):** a Pro subscription is worth it if used strategically — SWE-2 covers routine work for free, GLM-5.3 Max / Kimi K3 give the best value on subscription credits, and Gemini Flash is the safe buy once you're into Extra-Usage. Full details in [RECOMMENDATIONS.md](RECOMMENDATIONS.md) ([RECOMMENDATIONS_RU.md](и рекомендации по русски)).
+**Practical advice (October 2026):** a Pro subscription is worth it if used strategically — SWE-2 covers routine work for free, GLM-5.3 Max / Kimi K3 give the best value on subscription credits, and Gemini Flash is the safe buy once you're into Extra-Usage. Full details in [RECOMMENDATIONS.md](RECOMMENDATIONS.md) ([и рекомендации по русски](RECOMMENDATIONS_RU.md)).
 
 - **No Windsurf IDE needed** — OAuth once, then it's just a localhost HTTP service
 - **Zero dependencies** — plain Node/tsx, no npm packages
