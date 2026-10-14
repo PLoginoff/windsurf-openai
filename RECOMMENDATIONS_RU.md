@@ -32,27 +32,27 @@
 | 🟢 FREE | 50 | 0 | - | - | fresh | 100 | SWE-2 Medium |
 | 🟢 FREE | 50 | 0 | - | - | fresh | 100 | SWE-2 High |
 | 🟢 FREE | 50 | 0 | - | - | fresh | 100 | SWE-2 Max |
-| 🟡 PROMO | 76 | 6 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.7 Flash Low |
-| 🟡 PROMO | 76 | 6 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.8 Flash Low |
-| 🟡 PROMO | 76 | 8 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.8 Flash Medium |
-| 🟡 PROMO | 76 | 8 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.7 Flash Medium |
-| 🟡 PROMO | 76 | 10 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.7 Flash High |
-| 🟡 PROMO | 76 | 10 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.8 Flash High |
-| 🟡 PROMO | ? | 50 | 1/5 | - | - | - | Gemini 4 Argon Low |
-| 🟡 PROMO | ? | 70 | 1/5 | - | - | - | Gemini 4 Argon Medium |
-| 🟡 PROMO | ? | 90 | 1/5 | - | - | - | Gemini 4 Argon High |
-|  | 82 | 40 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 Low |
-|  | 82 | 50 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 Medium |
-|  | 82 | 70 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 High |
-|  | 82 | 80 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 XHigh |
+| 🟢 PROMO | 76 | 6 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.7 Flash Low |
+| 🟢 PROMO | 76 | 6 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.8 Flash Low |
+| 🟢 PROMO | 76 | 8 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.8 Flash Medium |
+| 🟢 PROMO | 76 | 8 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.7 Flash Medium |
+| 🟢 PROMO | 76 | 10 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.7 Flash High |
+| 🟢 PROMO | 76 | 10 | 0.75/3.75 | 0.75/3.75 | fresh | 77 | Gemini 3.8 Flash High |
+| 🟢 PROMO | ? | 50 | 1/5 | - | - | - | Gemini 4 Argon Low |
+| 🟢 PROMO | ? | 70 | 1/5 | - | - | - | Gemini 4 Argon Medium |
+| 🟢 PROMO | ? | 90 | 1/5 | - | - | - | Gemini 4 Argon High |
+| 🟡 | 82 | 40 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 Low |
+| 🟡 | 82 | 50 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 Medium |
+| 🟡 | 82 | 70 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 High |
+| 🟡 | 82 | 80 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 XHigh |
 | 🔴 | 82 | 100 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5 Max |
 | 🔴 | 82 | 150 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5.1 Low |
 | 🔴 | 82 | 175 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5.1 Medium |
 | 🔴 | 82 | 200 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5.1 High |
 | 🔴 | 82 | 225 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5.1 XHigh |
 | 🔴 | 82 | 250 | 10/50 | 10/50 | fresh | 50 | Claude Fable 5.1 Max |
-|  | 78 | 75 | 5/25 | 5/25 | fresh | 70 | Claude Opus 5 Low |
-|  | 78 | 80 | 5/25 | 5/25 | fresh | 70 | Claude Opus 5 Medium |
+| 🟡 | 78 | 75 | 5/25 | 5/25 | fresh | 70 | Claude Opus 5 Low |
+| 🟡 | 78 | 80 | 5/25 | 5/25 | fresh | 70 | Claude Opus 5 Medium |
 | 🔴 | 78 | 115 | 5/25 | 5/25 | fresh | 70 | Claude Opus 5 High |
 | 🔴 | 78 | 150 | 10/50 | 5/25 | fresh | 70 | Claude Opus 5 Low Fast |
 | 🔴 | 78 | 155 | 5/25 | 5/25 | fresh | 70 | Claude Opus 5 XHigh |
@@ -61,64 +61,64 @@
 | 🔴 | 78 | 230 | 10/50 | 5/25 | fresh | 70 | Claude Opus 5 High Fast |
 | 🔴 | 78 | 310 | 10/50 | 5/25 | fresh | 70 | Claude Opus 5 XHigh Fast |
 | 🔴 | 78 | 320 | 10/50 | 5/25 | fresh | 70 | Claude Opus 5 Max Fast |
-|  | 77 | 10 | 2/6 | 2/6 | fresh | 55 | Grok 4.6 Low |
-|  | 77 | 20 | 2/6 | 2/6 | fresh | 55 | Grok 4.6 Medium |
-|  | 77 | 25 | 2/6 | 2/6 | fresh | 55 | Grok 4.6 High |
-|  | 77 | 30 | 2/6 | 2/6 | fresh | 55 | Grok 4.6 XHigh |
-|  | 76 | 4 | 3/15 | 0.7/15 | fresh | 49 | Kimi K3 Low |
-|  | 76 | 6 | 3/15 | 0.7/15 | fresh | 49 | Kimi K3 High |
-|  | 76 | 9 | 3/15 | 0.7/15 | fresh | 49 | Kimi K3 Max |
-|  | 75 | 9 | 5/30 | 5/30 | fresh | 57 | GPT-5.5 No Thinking |
-|  | 75 | 12 | 5/30 | 5/30 | fresh | 57 | GPT-5.5 Low Thinking |
-|  | 75 | 15 | 5/30 | 5/30 | fresh | 57 | GPT-5.5 Medium Thinking |
-|  | 75 | 22.5 | 12.5/75 | 5/30 | fresh | 57 | GPT-5.5 No Thinking Fast |
-|  | 75 | 24 | 5/30 | 5/30 | fresh | 57 | GPT-5.5 High Thinking |
-|  | 75 | 30 | 12.5/75 | 5/30 | fresh | 57 | GPT-5.5 Low Thinking Fast |
-|  | 75 | 36 | 5/30 | 5/30 | fresh | 57 | GPT-5.5 XHigh Thinking |
-|  | 75 | 37.5 | 12.5/75 | 5/30 | fresh | 57 | GPT-5.5 Medium Thinking Fast |
-|  | 75 | 60 | 12.5/75 | 5/30 | fresh | 57 | GPT-5.5 High Thinking Fast |
-|  | 75 | 90 | 12.5/75 | 5/30 | fresh | 57 | GPT-5.5 XHigh Thinking Fast |
-|  | 75 | 1 | 1.4/4.4 | 0.08/4.8 | fresh | 85 | GLM-5.3 Low |
-|  | 75 | 1 | 1.4/4.4 | 0.08/4.8 | fresh | 85 | GLM-5.3 High |
-|  | 75 | 1 | 1.4/4.4 | 0.08/4.8 | fresh | 85 | GLM-5.3 Max |
-|  | 74 | 20 | 5/25 | 5/25 | fresh | 76 | Claude Opus 4.8 Low |
-|  | 74 | 25 | 5/25 | 5/25 | fresh | 76 | Claude Opus 4.8 Medium |
-|  | 74 | 35 | 5/25 | 5/25 | fresh | 76 | Claude Opus 4.8 High |
-|  | 74 | 40 | 5/25 | 5/25 | fresh | 76 | Claude Opus 4.8 XHigh |
-|  | 74 | 40 | 10/50 | 5/25 | fresh | 76 | Claude Opus 4.8 Low Fast |
-|  | 74 | 50 | 5/25 | 5/25 | fresh | 76 | Claude Opus 4.8 Max |
-|  | 74 | 50 | 10/50 | 5/25 | fresh | 76 | Claude Opus 4.8 Medium Fast |
-|  | 74 | 70 | 10/50 | 5/25 | fresh | 76 | Claude Opus 4.8 High Fast |
-|  | 74 | 80 | 10/50 | 5/25 | fresh | 76 | Claude Opus 4.8 XHigh Fast |
+| 🟡 | 77 | 10 | 2/6 | 2/6 | fresh | 55 | Grok 4.6 Low |
+| 🟡 | 77 | 20 | 2/6 | 2/6 | fresh | 55 | Grok 4.6 Medium |
+| 🟡 | 77 | 25 | 2/6 | 2/6 | fresh | 55 | Grok 4.6 High |
+| 🟡 | 77 | 30 | 2/6 | 2/6 | fresh | 55 | Grok 4.6 XHigh |
+| 🟢 | 76 | 4 | 3/15 | 0.7/15 | fresh | 49 | Kimi K3 Low |
+| 🟢 | 76 | 6 | 3/15 | 0.7/15 | fresh | 49 | Kimi K3 High |
+| 🟢 | 76 | 9 | 3/15 | 0.7/15 | fresh | 49 | Kimi K3 Max |
+| 🟡 | 75 | 9 | 5/30 | 5/30 | fresh | 57 | GPT-5.5 No Thinking |
+| 🟡 | 75 | 12 | 5/30 | 5/30 | fresh | 57 | GPT-5.5 Low Thinking |
+| 🟡 | 75 | 15 | 5/30 | 5/30 | fresh | 57 | GPT-5.5 Medium Thinking |
+| 🟡 | 75 | 22.5 | 12.5/75 | 5/30 | fresh | 57 | GPT-5.5 No Thinking Fast |
+| 🟡 | 75 | 24 | 5/30 | 5/30 | fresh | 57 | GPT-5.5 High Thinking |
+| 🟡 | 75 | 30 | 12.5/75 | 5/30 | fresh | 57 | GPT-5.5 Low Thinking Fast |
+| 🟡 | 75 | 36 | 5/30 | 5/30 | fresh | 57 | GPT-5.5 XHigh Thinking |
+| 🟡 | 75 | 37.5 | 12.5/75 | 5/30 | fresh | 57 | GPT-5.5 Medium Thinking Fast |
+| 🟡 | 75 | 60 | 12.5/75 | 5/30 | fresh | 57 | GPT-5.5 High Thinking Fast |
+| 🟡 | 75 | 90 | 12.5/75 | 5/30 | fresh | 57 | GPT-5.5 XHigh Thinking Fast |
+| 🟢 | 75 | 1 | 1.4/4.4 | 0.08/4.8 | fresh | 85 | GLM-5.3 Low |
+| 🟢 | 75 | 1 | 1.4/4.4 | 0.08/4.8 | fresh | 85 | GLM-5.3 High |
+| 🟢 | 75 | 1 | 1.4/4.4 | 0.08/4.8 | fresh | 85 | GLM-5.3 Max |
+| 🟡 | 74 | 20 | 5/25 | 5/25 | fresh | 76 | Claude Opus 4.8 Low |
+| 🟡 | 74 | 25 | 5/25 | 5/25 | fresh | 76 | Claude Opus 4.8 Medium |
+| 🟡 | 74 | 35 | 5/25 | 5/25 | fresh | 76 | Claude Opus 4.8 High |
+| 🟡 | 74 | 40 | 5/25 | 5/25 | fresh | 76 | Claude Opus 4.8 XHigh |
+| 🟡 | 74 | 40 | 10/50 | 5/25 | fresh | 76 | Claude Opus 4.8 Low Fast |
+| 🟡 | 74 | 50 | 5/25 | 5/25 | fresh | 76 | Claude Opus 4.8 Max |
+| 🟡 | 74 | 50 | 10/50 | 5/25 | fresh | 76 | Claude Opus 4.8 Medium Fast |
+| 🟡 | 74 | 70 | 10/50 | 5/25 | fresh | 76 | Claude Opus 4.8 High Fast |
+| 🟡 | 74 | 80 | 10/50 | 5/25 | fresh | 76 | Claude Opus 4.8 XHigh Fast |
 | 🔴 | 74 | 100 | 10/50 | 5/25 | fresh | 76 | Claude Opus 4.8 Max Fast |
-|  | 74 | 20 | 5/25 | 5/25 | fresh | 56 | Claude Opus 4.7 Low |
-|  | 74 | 40 | 5/25 | 5/25 | fresh | 56 | Claude Opus 4.7 Medium |
-|  | 74 | 60 | 5/25 | 5/25 | fresh | 56 | Claude Opus 4.7 High |
-|  | 74 | 65 | 5/25 | 5/25 | fresh | 56 | Claude Opus 4.7 XHigh |
-|  | 74 | 75 | 5/25 | 5/25 | fresh | 56 | Claude Opus 4.7 Max |
-|  | 72 | 0.1 | 0.3/0.5 | 2/6 | fresh | 54 | xAI Grok-3 mini Thinking |
-|  | 72 | 1 | 3/15 | 2/6 | fresh | 54 | xAI Grok-3 |
-|  | 72 | 5 | 2/6 | 2/6 | fresh | 54 | Grok 4.5 Low |
-|  | 72 | 8 | 2/6 | 2/6 | fresh | 54 | Grok 4.5 Medium |
-|  | 72 | 10 | 2/6 | 2/6 | fresh | 54 | Grok 4.5 High |
-|  | 72 | 1 | 0.15/0.5 | 0.04/0.9 | fresh | 67 | GLM-5.3 Flash Low |
-|  | 72 | 1 | 0.15/0.5 | 0.04/0.9 | fresh | 67 | GLM-5.3 Flash High |
-|  | 72 | 1 | 0.15/0.5 | 0.04/0.9 | fresh | 67 | GLM-5.3 Flash Max |
-|  | 72 | 12 | 2/10 | 2/10 | fresh | 71 | Claude Sonnet 5 Low |
-|  | 72 | 15 | 2/10 | 2/10 | fresh | 71 | Claude Sonnet 5 Medium |
-|  | 72 | 20 | 2/10 | 2/10 | fresh | 71 | Claude Sonnet 5 High |
-|  | 72 | 30 | 2/10 | 2/10 | fresh | 71 | Claude Sonnet 5 XHigh |
-|  | 72 | 40 | 2/10 | 2/10 | fresh | 71 | Claude Sonnet 5 Max |
-|  | 71 | 1.5 | 2.5/15 | 2.5/15 | aging | 55 | GPT-5.4 No Thinking |
-|  | 71 | 1.5 | 2.5/15 | 2.5/15 | aging | 55 | GPT-5.4 Low Thinking |
-|  | 71 | 3 | 2.5/15 | 2.5/15 | aging | 55 | GPT-5.4 Medium Thinking |
-|  | 71 | 3 | 5/30 | 2.5/15 | aging | 55 | GPT-5.4 No Thinking Fast |
-|  | 71 | 3 | 5/30 | 2.5/15 | aging | 55 | GPT-5.4 Low Thinking Fast |
-|  | 71 | 4 | 2.5/15 | 2.5/15 | aging | 55 | GPT-5.4 High Thinking |
-|  | 71 | 6 | 5/30 | 2.5/15 | aging | 55 | GPT-5.4 Medium Thinking Fast |
-|  | 71 | 8 | 5/30 | 2.5/15 | aging | 55 | GPT-5.4 High Thinking Fast |
-|  | 71 | 12 | 2.5/15 | 2.5/15 | aging | 55 | GPT-5.4 XHigh Thinking |
-|  | 71 | 24 | 5/30 | 2.5/15 | aging | 55 | GPT-5.4 XHigh Thinking Fast |
+| 🟡 | 74 | 20 | 5/25 | 5/25 | fresh | 56 | Claude Opus 4.7 Low |
+| 🟡 | 74 | 40 | 5/25 | 5/25 | fresh | 56 | Claude Opus 4.7 Medium |
+| 🟡 | 74 | 60 | 5/25 | 5/25 | fresh | 56 | Claude Opus 4.7 High |
+| 🟡 | 74 | 65 | 5/25 | 5/25 | fresh | 56 | Claude Opus 4.7 XHigh |
+| 🟡 | 74 | 75 | 5/25 | 5/25 | fresh | 56 | Claude Opus 4.7 Max |
+| 🟡 | 72 | 0.1 | 0.3/0.5 | 2/6 | fresh | 54 | xAI Grok-3 mini Thinking |
+| 🟡 | 72 | 1 | 3/15 | 2/6 | fresh | 54 | xAI Grok-3 |
+| 🟡 | 72 | 5 | 2/6 | 2/6 | fresh | 54 | Grok 4.5 Low |
+| 🟡 | 72 | 8 | 2/6 | 2/6 | fresh | 54 | Grok 4.5 Medium |
+| 🟡 | 72 | 10 | 2/6 | 2/6 | fresh | 54 | Grok 4.5 High |
+| 🟢 | 72 | 1 | 0.15/0.5 | 0.04/0.9 | fresh | 67 | GLM-5.3 Flash Low |
+| 🟢 | 72 | 1 | 0.15/0.5 | 0.04/0.9 | fresh | 67 | GLM-5.3 Flash High |
+| 🟢 | 72 | 1 | 0.15/0.5 | 0.04/0.9 | fresh | 67 | GLM-5.3 Flash Max |
+| 🟡 | 72 | 12 | 2/10 | 2/10 | fresh | 71 | Claude Sonnet 5 Low |
+| 🟡 | 72 | 15 | 2/10 | 2/10 | fresh | 71 | Claude Sonnet 5 Medium |
+| 🟡 | 72 | 20 | 2/10 | 2/10 | fresh | 71 | Claude Sonnet 5 High |
+| 🟡 | 72 | 30 | 2/10 | 2/10 | fresh | 71 | Claude Sonnet 5 XHigh |
+| 🟡 | 72 | 40 | 2/10 | 2/10 | fresh | 71 | Claude Sonnet 5 Max |
+| 🟡 | 71 | 1.5 | 2.5/15 | 2.5/15 | aging | 55 | GPT-5.4 No Thinking |
+| 🟡 | 71 | 1.5 | 2.5/15 | 2.5/15 | aging | 55 | GPT-5.4 Low Thinking |
+| 🟡 | 71 | 3 | 2.5/15 | 2.5/15 | aging | 55 | GPT-5.4 Medium Thinking |
+| 🟡 | 71 | 3 | 5/30 | 2.5/15 | aging | 55 | GPT-5.4 No Thinking Fast |
+| 🟡 | 71 | 3 | 5/30 | 2.5/15 | aging | 55 | GPT-5.4 Low Thinking Fast |
+| 🟡 | 71 | 4 | 2.5/15 | 2.5/15 | aging | 55 | GPT-5.4 High Thinking |
+| 🟡 | 71 | 6 | 5/30 | 2.5/15 | aging | 55 | GPT-5.4 Medium Thinking Fast |
+| 🟡 | 71 | 8 | 5/30 | 2.5/15 | aging | 55 | GPT-5.4 High Thinking Fast |
+| 🟡 | 71 | 12 | 2.5/15 | 2.5/15 | aging | 55 | GPT-5.4 XHigh Thinking |
+| 🟡 | 71 | 24 | 5/30 | 2.5/15 | aging | 55 | GPT-5.4 XHigh Thinking Fast |
 |  | 69 | 0.5 | 0.14/0.28 | 0.02/0.64 | fresh | 54 | DeepSeek V4 Flash High |
 |  | 69 | 1 | 0.14/0.28 | 0.02/0.64 | fresh | 54 | DeepSeek V4 Flash Max |
 |  | 69 | 1 | 1.4/4.4 | 0.05/7 | fresh | 66 | GLM-5.2 No Thinking |
@@ -138,7 +138,7 @@
 |  | 62 | 1 | 0.95/4 | 0.65/3.41 | fresh | 35 | Kimi K2.6 |
 |  | 61 | 1 | 0.95/4 | 0.67/3.35 | fresh | 39 | Kimi K2.7 |
 |  | 58 | 35 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 Low |
-|  | 58 | 45 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 Medium |
+| 🟢 | 58 | 45 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 Medium |
 |  | 58 | 65 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 High |
 | 🔴 | 58 | 125 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 XHigh |
 | 🔴 | 58 | 150 | 4/20 | 4/20 | new | 76 | Claude Opus 5.5 Max |
@@ -231,6 +231,7 @@
 |  | ? | 2 | 2.5/20 | - | - | - | GPT-5.1 Medium Thinking Fast |
 
 **Score** — индекс coding/intelligence от Artificial Analysis через OpenRouter (0-100).
+**Маркеры** — 🟢 бесплатно/промо/фичеред (бери смело), 🟡 мощные по разумной цене (score ≥70, иногда можно), 🔴 ≥100 кредитов/промпт (денежная яма).
 **FREE** — бесплатное промо, как его подаёт Windsurf (линейка SWE). **PROMO** — скидочное окно, но кредиты за промпт всё же списываются.
 **WS $/1M** — цены Windsurf Extra-Usage; **OR $/1M** — ориентир OpenRouter. Оценки SWE — ручные.
 **Age** — дата релиза из OpenRouter: new <1мес, fresh <6мес, aging <18мес, old ≥18мес.
