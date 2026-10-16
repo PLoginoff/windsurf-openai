@@ -59,6 +59,19 @@ Restart Zed — the model list appears automatically: a few **featured models pi
 
 Other editors: point any OpenAI-compatible client at `http://127.0.0.1:42100/v1` (auth: Bearer key from `cli.ts status` for non-localhost clients).
 
+### Remote access
+
+With `--host 0.0.0.0` you can serve friends/teammates over the network. Put Bearer keys in `keys.json` next to the CLI (see `keys.json.example`):
+
+```json
+{
+  "my-secret-key": { "name": "me",           "max_credits": -1 },
+  "vasya-key":     { "name": "friend-vasya", "max_credits": 10 }
+}
+```
+
+`max_credits` limits which models that key can list and call: `-1` or missing = unlimited, `0` = free/promo only, `N` = models costing ≤ N credits/prompt. Free/promo models always pass. At startup the proxy logs each key's name with its visible model count.
+
 ## CLI
 
 | Command | Does |
@@ -100,7 +113,7 @@ Outbound requests to Windsurf honor the standard `HTTPS_PROXY` / `HTTP_PROXY` / 
 
 ## Security
 
-Localhost clients are trusted without a key. With `--host 0.0.0.0`, chat requests from remote clients must send `Authorization: Bearer <apiKey>` (the model list itself — names and tiers only — stays readable without a key). Credentials stored mode 0600. Never commit API keys.
+Localhost clients are trusted without a key. With `--host 0.0.0.0`, chat requests from remote clients must send `Authorization: Bearer <key>` — either a `keys.json` key or the stored Windsurf apiKey (`cli.ts status` prints it). The model list itself — names and tiers only — stays readable without a key. Credentials stored mode 0600. Never commit API keys.
 
 ## Requirements
 

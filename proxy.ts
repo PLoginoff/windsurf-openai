@@ -10,7 +10,7 @@ import * as fs from "fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "http";
 import { streamChatEventsWithRetry, CloudChatError, type ChatHistoryItem, type ToolDef } from "./chat";
 import { loadCredentials } from "./oauth";
-import { authenticateKey, type KeyPolicy } from "./keys";
+import { authenticateKey, creditLimit, type KeyPolicy } from "./keys";
 import { getCachedCatalog } from "./catalog";
 import { getUserStatus, getCachedUserStatus, isPromoActive, isActuallyFreePromo, type UserStatusModel } from "./status";
 import { stripCostAnnotation, tierAnnotation, tierFromCredits, userTierOverride, isBlockedModel, titleizeModelId, type PriceTier, type UsageSummary } from "./costs";
@@ -19,16 +19,6 @@ import { powerScore } from "./ranks";
 
 const WINDSURF_PROXY_HOST = "127.0.0.1";
 const WINDSURF_PROXY_PORT = 42100;
-
-let configuredProxyKey: string | null = null;
-
-export function setProxyKey(key: string | null): void {
-  configuredProxyKey = key && key.trim().length > 0 ? key.trim() : null;
-}
-
-export function getProxyKey(): string | null {
-  return configuredProxyKey ?? (process.env.WINDSURF_PROXY_KEY?.trim() || null);
-}
 
 // ----------------------------------------------------------------------------
 // Proxy handler (Node http server)
@@ -124,9 +114,9 @@ export async function buildModelList(maxCredits?: number): Promise<ModelListItem
   };
 
   // Per-key filter: with a max_credits limit, only free/promo and models
-  // costing ≤ limit credits/prompt are listed.
+  // costing ≤ limit credits/prompt are listed. 0 = free/promo only.
   const withinLimit = (m: UserStatusModel): boolean => {
-    if (maxCredits === undefined || maxCredits <= 0) return true;
+    if (maxCredits === undefined) return true;
     if (isActuallyFreePromo(m) || isPromoActive(m)) return true;
     return (m.creditsPerPrompt ?? 0) <= maxCredits;
   };
@@ -244,16 +234,6 @@ async function authorizeRequest(req: IncomingMessage): Promise<{ status: number;
   const policy = authenticateKey(presented);
   if (policy) return { status: 0, body: "", contentType: "", keyPolicy: policy };
 
-  // Check custom proxy key if configured (--key or WINDSURF_PROXY_KEY)
-  const proxyKey = getProxyKey();
-  if (proxyKey) {
-    const proxyKeyBuf = Buffer.from(proxyKey, "utf8");
-    if (presentedBuf.length === proxyKeyBuf.length && crypto.timingSafeEqual(presentedBuf, proxyKeyBuf)) {
-      return null;
-    }
-    return { status: 401, body: JSON.stringify({ error: { message: "Unauthorized: Invalid proxy key.", type: "windsurf_error" } }), contentType: "application/json" };
-  }
-
   // Otherwise, accept the persisted apiKey from disk (from `cli.ts login`)
   try {
     const creds = loadCredentials();
@@ -297,7 +277,7 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
       let maxCredits: number | undefined;
       if (authHeader.startsWith("Bearer ")) {
         const policy = authenticateKey(authHeader.slice("Bearer ".length));
-        if (policy?.max_credits !== undefined && policy.max_credits > 0) maxCredits = policy.max_credits;
+        if (policy) maxCredits = creditLimit(policy);
       }
       const items = await buildModelList(maxCredits);
       const created = Math.floor(Date.now() / 1000);
@@ -395,14 +375,15 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
       }
 
       // Per-key model restriction: max credits-per-prompt (free/promo always pass)
-      if (keyPolicy?.max_credits !== undefined && keyPolicy.max_credits > 0) {
+      const keyLimit = keyPolicy ? creditLimit(keyPolicy) : undefined;
+      if (keyLimit !== undefined) {
         const status = getCachedUserStatus();
         const m = status?.models.get(modelUid);
         const credits = m?.creditsPerPrompt ?? 0;
         const isFree = m ? isActuallyFreePromo(m) || isPromoActive(m) : false;
-        if (!isFree && credits > keyPolicy.max_credits) {
+        if (!isFree && credits > keyLimit) {
           res.writeHead(403, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ error: { message: `Model not allowed for this key: costs ${credits} credits/prompt, limit is ${keyPolicy.max_credits}. Pick a cheaper model.`, type: "windsurf_error" } }));
+          res.end(JSON.stringify({ error: { message: `Model not allowed for this key: costs ${credits} credits/prompt, limit is ${keyLimit}. Pick a cheaper model.`, type: "windsurf_error" } }));
           return;
         }
       }

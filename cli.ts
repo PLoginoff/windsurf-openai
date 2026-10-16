@@ -9,13 +9,13 @@
  *   npx tsx cli.ts models
  *
  * The proxy speaks OpenAI Chat Completions at http://<host>:<port>/v1.
- * Localhost clients need no key; remote clients (--host 0.0.0.0) send
- * Bearer <apiKey> (printed by `status`).
+ * Localhost clients need no key; remote clients (--host 0.0.0.0) send a
+ * Bearer key from keys.json, or the Windsurf apiKey (printed by `status`).
  *
  * Point Zed's llama.cpp provider at http://127.0.0.1:42100 (no /v1),
  * or any OpenAI-compatible client at http://127.0.0.1:42100/v1.
  */
-import { startProxy, stopProxy, buildModelList, setProxyKey, getProxyKey } from "./proxy";
+import { startProxy, stopProxy, buildModelList } from "./proxy";
 import {
   loadCredentials, saveCredentials, deleteCredentials,
   DEFAULT_REGION, runLoginLoopback, registerUser,
@@ -23,21 +23,21 @@ import {
 } from "./oauth";
 import { clearCachedUserJwt } from "./auth";
 import { clearSessionIds, streamChatEvents } from "./chat";
-import { getUserStatus, isPromoActive, isActuallyFreePromo, clearCachedUserStatus } from "./status";
+import { getUserStatus, getCachedUserStatus, isPromoActive, isActuallyFreePromo, clearCachedUserStatus } from "./status";
 import { isBlockedModel } from "./costs";
 import { FEATURED_UIDS, GREEN_FAMILIES, YELLOW_FAMILIES } from "./featured";
 import { baseUid } from "./ranks";
 import { powerScore, getOrCatalog, lookupOrInfo, speedClass, speedInfo, collectSpeeds, manualCreated } from "./ranks";
+import { keyCount, getKeys, creditLimit } from "./keys";
 import { clearCachedCatalog } from "./catalog";
 
 const DEFAULT_PORT = 42100;
 const DEFAULT_HOST = "127.0.0.1";
 
-function parseArgs(argv: string[]): { command: string; port: number; host: string; key?: string; zed: boolean; all: boolean; md: boolean } {
+function parseArgs(argv: string[]): { command: string; port: number; host: string; zed: boolean; all: boolean; md: boolean } {
   let command = "serve";
   let port = DEFAULT_PORT;
   let host = DEFAULT_HOST;
-  let key: string | undefined;
   let zed = false;
   let all = false;
   let md = false;
@@ -47,22 +47,15 @@ function parseArgs(argv: string[]): { command: string; port: number; host: strin
     else if (a.startsWith("--port=")) { port = parseInt(a.slice("--port=".length), 10) || DEFAULT_PORT; }
     else if (a === "--host" || a === "--bind") { host = argv[++i] ?? DEFAULT_HOST; }
     else if (a.startsWith("--host=") || a.startsWith("--bind=")) { host = a.slice(a.indexOf("=") + 1); }
-    else if (a === "--key" || a === "-k") { key = argv[++i]; }
-    else if (a.startsWith("--key=")) { key = a.slice("--key=".length); }
     else if (a === "--zed") { zed = true; }
     else if (a === "--all") { all = true; }
     else if (a === "--md") { md = true; }
     else if (!a.startsWith("--")) { command = a; }
   }
-  return { command, port, host, key, zed, all, md };
+  return { command, port, host, zed, all, md };
 }
 
-async function cmdServe(port: number, host: string, key?: string): Promise<void> {
-  if (key) {
-    setProxyKey(key);
-  }
-  const effectiveKey = getProxyKey();
-
+async function cmdServe(port: number, host: string): Promise<void> {
   const stored = loadCredentials();
   if (stored) {
     console.error(`[windsurf] authenticated as ${stored.name} (${stored.apiServerUrl})`);
@@ -84,10 +77,32 @@ async function cmdServe(port: number, host: string, key?: string): Promise<void>
   console.error(`[windsurf] proxy listening on http://${host}:${actualPort}/v1`);
   console.error(`[windsurf] models endpoint:  http://${host}:${actualPort}/v1/models`);
   console.error(`[windsurf] chat endpoint:   http://${host}:${actualPort}/v1/chat/completions`);
-  if (effectiveKey) {
-    console.error(`[windsurf] proxy auth:     --key enabled (Bearer ${effectiveKey})`);
-  } else if (stored) {
-    console.error(`[windsurf] proxy auth:     defaulting to Windsurf apiKey (Bearer ${stored.apiKey})`);
+
+  const nKeys = keyCount();
+  if (nKeys > 0) {
+    console.error(`[windsurf] access keys: ${nKeys} configured in keys.json`);
+    // Single status fetch — the model list is already warmed above (or will
+    // come from the same in-flight request). Count per key from that, not from
+    // buildModelList() per key — each call re-fires getUserStatus and stalls.
+    const status = await getUserStatus(stored!.apiKey, stored!.apiServerUrl).catch(() => null);
+    if (status) {
+      const usable = [...status.models.values()].filter(m => !m.disabled && !isBlockedModel(m.uid));
+      for (const [key, policy] of getKeys()) {
+        const name = policy.name ?? key;
+        const limit = creditLimit(policy);
+        const visible = limit !== undefined
+          ? usable.filter(m => isActuallyFreePromo(m) || isPromoActive(m) || (m.creditsPerPrompt ?? 0) <= limit).length
+          : usable.length;
+        const label = limit !== undefined ? `≤${limit}cr` : "unlimited";
+        console.error(`[windsurf]   "${name}" → ${visible} models (${label})`);
+      }
+    }
+  } else {
+    console.error("[windsurf] access: localhost only (no keys.json — full local access)");
+  }
+
+  if (stored) {
+    console.error(`[windsurf] proxy auth:     Windsurf apiKey accepted for remote clients (Bearer ${stored.apiKey.slice(0, 12)}…)`);
   } else {
     console.error("[windsurf] chat will return 503 until you log in (windsurf-openai login)");
   }
@@ -469,9 +484,9 @@ async function cmdSpeeds(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const { command, port, host, key, zed, all, md } = parseArgs(process.argv.slice(2));
+  const { command, port, host, zed, all, md } = parseArgs(process.argv.slice(2));
   switch (command) {
-    case "serve": await cmdServe(port, host, key); break;
+    case "serve": await cmdServe(port, host); break;
     case "login": await cmdLogin(); break;
     case "status": cmdStatus(); break;
     case "logout": cmdLogout(); break;
@@ -520,7 +535,11 @@ Commands:
 Options:
   --port, -p <n>   Proxy port (default 42100)
   --host <addr>    Bind address (default 127.0.0.1; use 0.0.0.0 to expose on LAN/WAN)
-  --key, -k <key>  Custom API key for remote clients (or WINDSURF_PROXY_KEY env)
+
+Remote access: put keys in keys.json next to the CLI — remote clients must send
+'Authorization: Bearer <key>'. Optional 'max_credits' per key limits model list
+and chat to models costing ≤ that many credits/prompt (free/promo always pass).
+Localhost clients are trusted without a key.
 `);
 }
 

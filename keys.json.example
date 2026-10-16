@@ -1,4 +1,4 @@
 {
-  "pashka": { "max_credits": 0 },
-  "friend-vasya": { "max_credits": 10 }
+  "my-secret-key": { "name": "me",           "max_credits": -1 },
+  "vasya-key":     { "name": "friend-vasya", "max_credits": 10 }
 }
